@@ -34,6 +34,7 @@ pub(crate) fn document<'i>(
             | EventKind::ArrayOpen
             | EventKind::ArrayClose
             | EventKind::Scalar
+            | EventKind::EnvVar
             | EventKind::ValueSep
             | EventKind::Error
             | EventKind::KeySep
@@ -128,6 +129,7 @@ fn on_table<'i>(
             | EventKind::ArrayOpen
             | EventKind::ArrayClose
             | EventKind::Scalar
+            | EventKind::EnvVar
             | EventKind::ValueSep
             | EventKind::Error
             | EventKind::KeySep

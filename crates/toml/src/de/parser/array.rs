@@ -2,6 +2,7 @@ use serde_spanned::Spanned;
 
 use crate::de::parser::inline_table::on_inline_table;
 use crate::de::parser::value::on_scalar;
+use crate::de::parser::value::on_env_var;
 use crate::de::{DeArray, DeValue};
 
 use crate::de::parser::prelude::*;
@@ -62,6 +63,10 @@ pub(crate) fn on_array<'i>(
             }
             EventKind::Scalar => {
                 let value = on_scalar(event, source, errors);
+                state.capture_value(event, value);
+            }
+            EventKind::EnvVar => {
+                let value = on_env_var(event, source, errors);
                 state.capture_value(event, value);
             }
             EventKind::ValueSep => {

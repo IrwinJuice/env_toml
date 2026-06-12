@@ -29,8 +29,8 @@ pre-release-replacements = [
 
 [features]
 default = ["std", "serde", "parse", "display"]
-std = ["indexmap?/std", "serde_core?/std", "toml_parser?/std"]#, "toml_writer?/std", "toml_datetime/std", "serde_spanned/std"]
-serde = ["dep:serde_core"]#, "toml_datetime/serde", "serde_spanned/serde"]
+std = ["indexmap?/std", "serde_core?/std", "toml_parser?/std", "toml_writer?/std", "toml_datetime/std", "serde_spanned/std"]
+serde = ["dep:serde_core", "toml_datetime/serde", "serde_spanned/serde"]
 parse = ["dep:toml_parser", "dep:winnow"]
 display = ["dep:toml_writer"]
 fast_hash = ["preserve_order", "dep:foldhash"]

@@ -30,6 +30,7 @@ pub(crate) fn on_key<'i>(
                 | EventKind::ArrayOpen
                 | EventKind::ArrayClose
                 | EventKind::Scalar
+                | EventKind::EnvVar
                 | EventKind::ValueSep
                 | EventKind::Comment
                 | EventKind::Newline

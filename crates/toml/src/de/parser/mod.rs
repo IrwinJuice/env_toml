@@ -11,6 +11,7 @@ pub use devalue::DeFloat;
 pub use devalue::DeInteger;
 pub use devalue::DeString;
 pub use devalue::DeValue;
+pub use devalue::DeEnvVar;
 
 use crate::alloc_prelude::*;
 

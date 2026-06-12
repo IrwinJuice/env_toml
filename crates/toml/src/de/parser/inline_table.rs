@@ -7,7 +7,7 @@ use crate::de::DeValue;
 use crate::de::parser::array::on_array;
 use crate::de::parser::key::on_key;
 use crate::de::parser::prelude::*;
-use crate::de::parser::value::on_scalar;
+use crate::de::parser::value::{on_env_var, on_scalar};
 use crate::map::Entry;
 
 /// ```abnf
@@ -69,6 +69,10 @@ pub(crate) fn on_inline_table<'i>(
             }
             EventKind::Scalar => {
                 let value = on_scalar(event, source, errors);
+                state.capture_value(event, value);
+            }
+            EventKind::EnvVar => {
+                let value = on_env_var(event, source, errors);
                 state.capture_value(event, value);
             }
             EventKind::ValueSep => {
