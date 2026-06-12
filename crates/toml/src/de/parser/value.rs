@@ -106,7 +106,7 @@ pub(crate) fn on_scalar<'i>(
     let value_span = value_span.start()..value_span.end();
 
     let raw = source.get(event).unwrap();
-    let mut decoded = alloc::borrow::Cow::Borrowed("");
+    let mut decoded = Cow::Borrowed("");
     let kind = raw.decode_scalar(&mut decoded, errors);
     match kind {
         toml_parser::decoder::ScalarKind::String => {

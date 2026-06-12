@@ -284,6 +284,13 @@ impl EventReceiver for alloc::vec::Vec<Event> {
             span,
         });
     }
+    fn env_var(&mut self, span: Span, _error: &mut dyn ErrorSink) {
+        self.push(Event {
+            kind: EventKind::EnvVar,
+            encoding: None,
+            span,
+        });
+    }
     fn error(&mut self, span: Span, _error: &mut dyn ErrorSink) {
         self.push(Event {
             kind: EventKind::Error,

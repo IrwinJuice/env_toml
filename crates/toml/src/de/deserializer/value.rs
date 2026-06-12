@@ -1,14 +1,83 @@
 use serde_core::de::IntoDeserializer as _;
 use serde_spanned::Spanned;
-
+use toml_datetime::de::DatetimeDeserializer;
 use super::ArrayDeserializer;
 use super::TableDeserializer;
-use toml_datetime::de::DatetimeDeserializer;
 use crate::alloc_prelude::*;
+use crate::de::DeEnvVar;
 use crate::de::DeString;
 use crate::de::DeTable;
 use crate::de::DeValue;
 use crate::de::Error;
+
+/// Resolve an env var (or its default) to an owned String.
+fn resolve_env_var(
+    v: DeEnvVar<'_>,
+    span: &core::ops::Range<usize>,
+) -> Result<String, Error> {
+    let name = v.name.as_ref();
+    let value = {
+        #[cfg(feature = "std")]
+        {
+            std::env::var(name).ok()
+        }
+        #[cfg(not(feature = "std"))]
+        {
+            None
+        }
+    };
+    value
+        .or_else(|| v.default.map(|d| d.into_owned()))
+        .ok_or_else(|| {
+            Error::custom(
+                format!("environment variable `{}` not set", name),
+                Some(span.clone()),
+            )
+        })
+}
+
+/// Re-parse a resolved env var string as a TOML value and dispatch to the
+/// appropriate visitor method.  Falls back to `visit_string` when the string
+/// is not a valid TOML literal.
+fn visit_env_var_value<'de, V>(
+    value: String,
+    visitor: V,
+) -> Result<V::Value, Error>
+where
+    V: serde_core::de::Visitor<'de>,
+{
+    match DeValue::parse(value.as_str()) {
+        Ok(spanned) => match spanned.into_inner() {
+            DeValue::Integer(v) => {
+                if let Some(i) = v.to_i64() {
+                    visitor.visit_i64(i)
+                } else if let Some(u) = v.to_u64() {
+                    visitor.visit_u64(u)
+                } else if let Some(i) = v.to_i128() {
+                    visitor.visit_i128(i)
+                } else if let Some(u) = v.to_u128() {
+                    visitor.visit_u128(u)
+                } else {
+                    visitor.visit_string(value)
+                }
+            }
+            DeValue::Float(v) => {
+                if let Some(f) = v.to_f64() {
+                    visitor.visit_f64(f)
+                } else {
+                    visitor.visit_string(value)
+                }
+            }
+            DeValue::Boolean(b) => visitor.visit_bool(b),
+            DeValue::String(s) => visitor.visit_string(s.into_owned()),
+            // Arrays, tables, datetimes are not sensible env-var payloads;
+            // fall back to the raw string so the caller can decide.
+            _ => visitor.visit_string(value),
+        },
+        // Not a valid TOML literal — treat as a plain string (e.g. "hello").
+        Err(_) => visitor.visit_string(value),
+    }
+}
 
 /// Deserialization implementation for TOML [values][crate::Value].
 ///
@@ -117,26 +186,8 @@ impl<'de> serde_core::Deserializer<'de> for ValueDeserializer<'de> {
             DeValue::Array(v) => ArrayDeserializer::new(v, span.clone()).deserialize_any(visitor),
             DeValue::Table(v) => TableDeserializer::new(v, span.clone()).deserialize_any(visitor),
             DeValue::EnvVar(v) => {
-                let name = v.name.as_ref();
-                let value = {
-                    #[cfg(feature = "std")]
-                    {
-                        std::env::var(name).ok()
-                    }
-                    #[cfg(not(feature = "std"))]
-                    {
-                        None
-                    }
-                };
-                let value = value
-                    .or_else(|| v.default.map(|d| d.into_owned()))
-                    .ok_or_else(|| {
-                        Error::custom(
-                            format!("environment variable `{}` not set", name),
-                            Some(span.clone()),
-                        )
-                    })?;
-                visitor.visit_string(value)
+                let value = resolve_env_var(v, &span)?;
+                visit_env_var_value(value, visitor)
             }
         }
         .map_err(|mut e: Self::Error| {
@@ -253,6 +304,10 @@ impl<'de> serde_core::Deserializer<'de> for ValueDeserializer<'de> {
         let span = self.span;
         match self.input {
             DeValue::String(v) => visitor.visit_enum(v.into_deserializer()),
+            DeValue::EnvVar(v) => {
+                let value = resolve_env_var(v, &span)?;
+                visitor.visit_enum(value.into_deserializer())
+            }
             DeValue::Table(v) => {
                 TableDeserializer::new(v, span.clone()).deserialize_enum(name, variants, visitor)
             }
@@ -266,8 +321,39 @@ impl<'de> serde_core::Deserializer<'de> for ValueDeserializer<'de> {
         })
     }
 
+    /// When the target type is `String` (or `str`), always yield the raw
+    /// resolved env-var value as a string — never re-parse it as TOML.
+    /// This lets a field like `port_s: String` hold `"8080"` even when the
+    /// same env var is deserialized as `u16` elsewhere.
+    fn deserialize_str<V>(self, visitor: V) -> Result<V::Value, Error>
+    where
+        V: serde_core::de::Visitor<'de>,
+    {
+        let span = self.span.clone();
+        match self.input {
+            DeValue::EnvVar(v) => {
+                let value = resolve_env_var(v, &span)?;
+                visitor.visit_string(value)
+            }
+            _ => self.deserialize_any(visitor),
+        }
+        .map_err(|mut e: Self::Error| {
+            if e.span().is_none() {
+                e.set_span(Some(span));
+            }
+            e
+        })
+    }
+
+    fn deserialize_string<V>(self, visitor: V) -> Result<V::Value, Error>
+    where
+        V: serde_core::de::Visitor<'de>,
+    {
+        self.deserialize_str(visitor)
+    }
+
     serde_core::forward_to_deserialize_any! {
-        bool u8 u16 u32 u64 i8 i16 i32 i64 f32 f64 char str string seq
+        bool u8 u16 u32 u64 i8 i16 i32 i64 f32 f64 char seq
         bytes byte_buf map unit
         ignored_any unit_struct tuple_struct tuple identifier
     }
