@@ -29,6 +29,7 @@ pub trait EventReceiver {
     fn whitespace(&mut self, _span: Span, _error: &mut dyn ErrorSink) {}
     fn comment(&mut self, _span: Span, _error: &mut dyn ErrorSink) {}
     fn newline(&mut self, _span: Span, _error: &mut dyn ErrorSink) {}
+    fn env_var(&mut self, _span: Span, _error: &mut dyn ErrorSink) {}
     fn error(&mut self, _span: Span, _error: &mut dyn ErrorSink) {}
 }
 
@@ -146,6 +147,13 @@ where
     fn newline(&mut self, span: Span, _error: &mut dyn ErrorSink) {
         (self)(Event {
             kind: EventKind::Newline,
+            encoding: None,
+            span,
+        });
+    }
+    fn env_var(&mut self, span: Span, _error: &mut dyn ErrorSink) {
+        (self)(Event {
+            kind: EventKind::EnvVar,
             encoding: None,
             span,
         });
@@ -366,6 +374,9 @@ impl EventReceiver for ValidateWhitespace<'_, '_> {
 
         self.receiver.newline(span, error);
     }
+    fn env_var(&mut self, span: Span, error: &mut dyn ErrorSink) {
+        self.receiver.env_var(span, error);
+    }
     fn error(&mut self, span: Span, error: &mut dyn ErrorSink) {
         self.receiver.error(span, error);
     }
@@ -460,6 +471,9 @@ impl EventReceiver for RecursionGuard<'_> {
     fn newline(&mut self, span: Span, error: &mut dyn ErrorSink) {
         self.receiver.newline(span, error);
     }
+    fn env_var(&mut self, span: Span, error: &mut dyn ErrorSink) {
+        self.receiver.env_var(span, error);
+    }
     fn error(&mut self, span: Span, error: &mut dyn ErrorSink) {
         self.receiver.error(span, error);
     }
@@ -515,6 +529,7 @@ pub enum EventKind {
     Whitespace,
     Comment,
     Newline,
+    EnvVar,
     Error,
 }
 
@@ -537,6 +552,7 @@ impl EventKind {
             Self::Whitespace => "whitespace",
             Self::Comment => "comment",
             Self::Newline => "newline",
+            Self::EnvVar => "env var",
             Self::Error => "error",
         }
     }
