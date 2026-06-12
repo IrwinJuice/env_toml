@@ -880,8 +880,6 @@ fn on_scalar(
                 match next_token.kind() {
                     TokenKind::Comment
                     | TokenKind::Comma
-                    | TokenKind::DollarSign
-                    | TokenKind::Colon
                     | TokenKind::Newline
                     | TokenKind::Eof
                     | TokenKind::Equals
@@ -905,7 +903,7 @@ fn on_scalar(
                         }
                         break;
                     }
-                    TokenKind::Dot | TokenKind::Atom => {
+                    TokenKind::Dot | TokenKind::Atom | TokenKind::DollarSign | TokenKind::Colon => {
                         span = span.append(next_token.span());
                         let _ = tokens.next_token();
                     }
