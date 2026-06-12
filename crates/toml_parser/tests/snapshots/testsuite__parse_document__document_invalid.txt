@@ -49,7 +49,7 @@ EventResults {
             span: 35..36,
         },
         Event {
-            kind: SimpleKey,
+            kind: Error,
             encoding: None,
             span: 36..37,
         },
@@ -57,43 +57,18 @@ EventResults {
     errors: [
         ParseError {
             context: Some(
-                37..37,
+                36..37,
             ),
-            description: "key with no value",
+            description: "invalid key-value pair",
             expected: Some(
                 [
-                    Literal(
-                        "=",
+                    Description(
+                        "key",
                     ),
                 ],
             ),
             unexpected: Some(
-                37..37,
-            ),
-        },
-        ParseError {
-            context: Some(
-                36..37,
-            ),
-            description: "invalid unquoted key",
-            expected: Some(
-                [
-                    Description(
-                        "letters",
-                    ),
-                    Description(
-                        "numbers",
-                    ),
-                    Literal(
-                        "-",
-                    ),
-                    Literal(
-                        "_",
-                    ),
-                ],
-            ),
-            unexpected: Some(
-                36..37,
+                36..36,
             ),
         },
     ],
