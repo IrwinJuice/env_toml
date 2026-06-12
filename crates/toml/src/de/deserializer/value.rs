@@ -2,8 +2,8 @@ use serde_core::de::IntoDeserializer as _;
 use serde_spanned::Spanned;
 
 use super::ArrayDeserializer;
-use super::DatetimeDeserializer;
 use super::TableDeserializer;
+use toml_datetime::de::DatetimeDeserializer;
 use crate::alloc_prelude::*;
 use crate::de::DeString;
 use crate::de::DeTable;
@@ -116,6 +116,28 @@ impl<'de> serde_core::Deserializer<'de> for ValueDeserializer<'de> {
             DeValue::Datetime(v) => visitor.visit_map(DatetimeDeserializer::new(v)),
             DeValue::Array(v) => ArrayDeserializer::new(v, span.clone()).deserialize_any(visitor),
             DeValue::Table(v) => TableDeserializer::new(v, span.clone()).deserialize_any(visitor),
+            DeValue::EnvVar(v) => {
+                let name = v.name.as_ref();
+                let value = {
+                    #[cfg(feature = "std")]
+                    {
+                        std::env::var(name).ok()
+                    }
+                    #[cfg(not(feature = "std"))]
+                    {
+                        None
+                    }
+                };
+                let value = value
+                    .or_else(|| v.default.map(|d| d.into_owned()))
+                    .ok_or_else(|| {
+                        Error::custom(
+                            format!("environment variable `{}` not set", name),
+                            Some(span.clone()),
+                        )
+                    })?;
+                visitor.visit_string(value)
+            }
         }
         .map_err(|mut e: Self::Error| {
             if e.span().is_none() {

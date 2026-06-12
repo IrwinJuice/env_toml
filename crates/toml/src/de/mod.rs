@@ -18,6 +18,8 @@ pub use deserializer::Deserializer;
 #[cfg(feature = "serde")]
 pub use deserializer::ValueDeserializer;
 #[cfg(feature = "parse")]
+pub use parser::DeEnvVar;
+#[cfg(feature = "parse")]
 pub use parser::DeArray;
 #[cfg(feature = "parse")]
 pub use parser::DeFloat;
