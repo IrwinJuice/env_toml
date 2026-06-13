@@ -40,6 +40,6 @@ fn main() {
         { Struct = { value = 123 } }
     ]"#;
 
-    let decoded: Config = toml::from_str(toml_str).unwrap();
+    let decoded: Config = env_toml::from_str(toml_str).unwrap();
     println!("{decoded:#?}");
 }

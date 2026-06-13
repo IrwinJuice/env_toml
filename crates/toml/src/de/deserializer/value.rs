@@ -23,7 +23,10 @@ fn resolve_env_var(
         }
         #[cfg(not(feature = "std"))]
         {
-            None
+            return Err(Error::custom(
+                format!("environment variable `{}` requires the `std` feature", name),
+                Some(span.clone()),
+            ));
         }
     };
     value
@@ -100,7 +103,7 @@ where
 /// }
 ///
 /// let value = r#"{ title = 'TOML Example', owner = { name = 'Lisa' } }"#;
-/// let deserializer = toml::de::ValueDeserializer::parse(value).unwrap();
+/// let deserializer = env_toml::de::ValueDeserializer::parse(value).unwrap();
 /// let config = Config::deserialize(deserializer).unwrap();
 /// assert_eq!(config.title, "TOML Example");
 /// assert_eq!(config.owner.name, "Lisa");

@@ -1,16 +1,16 @@
 use std::f64;
 
-use toml::toml;
+use env_toml::toml;
 
 macro_rules! table {
     ($($key:expr => $value:expr,)*) => {{
         // https://github.com/rust-lang/rust/issues/60643
         #[allow(unused_mut)]
-        let mut table = toml::value::Table::new();
+        let mut table = env_toml::value::Table::new();
         $(
             table.insert($key.to_owned(), $value.into());
         )*
-        toml::Value::Table(table)
+        env_toml::Value::Table(table)
     }};
 }
 
@@ -19,17 +19,17 @@ macro_rules! array {
         // https://github.com/rust-lang/rust/issues/60643
         #![allow(clippy::vec_init_then_push)]
         #[allow(unused_mut)]
-        let mut array = toml::value::Array::new();
+        let mut array = env_toml::value::Array::new();
         $(
             array.push($element.into());
         )*
-        toml::Value::Array(array)
+        env_toml::Value::Array(array)
     }};
 }
 
 macro_rules! datetime {
     ($s:tt) => {
-        $s.parse::<toml::value::Datetime>().unwrap()
+        $s.parse::<env_toml::value::Datetime>().unwrap()
     };
 }
 
@@ -82,7 +82,7 @@ fn test_cargo_toml() {
         },
     };
 
-    assert_eq!(toml::Value::Table(actual), expected);
+    assert_eq!(env_toml::Value::Table(actual), expected);
 }
 
 #[test]
@@ -137,7 +137,7 @@ fn test_array() {
         },
     };
 
-    assert_eq!(toml::Value::Table(actual), expected);
+    assert_eq!(env_toml::Value::Table(actual), expected);
 }
 
 #[test]
@@ -188,7 +188,7 @@ fn test_number() {
         "bin" => 214,
     };
 
-    assert_eq!(toml::Value::Table(actual), expected);
+    assert_eq!(env_toml::Value::Table(actual), expected);
 }
 
 #[test]
@@ -287,7 +287,7 @@ fn test_datetime() {
         },
     };
 
-    assert_eq!(toml::Value::Table(actual), expected);
+    assert_eq!(env_toml::Value::Table(actual), expected);
 }
 
 // This test requires rustc >= 1.20.
@@ -315,7 +315,7 @@ fn test_quoted_key() {
         },
     };
 
-    assert_eq!(toml::Value::Table(actual), expected);
+    assert_eq!(env_toml::Value::Table(actual), expected);
 }
 
 #[test]
@@ -338,7 +338,7 @@ fn test_empty() {
         },
     };
 
-    assert_eq!(toml::Value::Table(actual), expected);
+    assert_eq!(env_toml::Value::Table(actual), expected);
 }
 
 #[test]
@@ -373,5 +373,5 @@ fn test_dotted_keys() {
         },
     };
 
-    assert_eq!(toml::Value::Table(actual), expected);
+    assert_eq!(env_toml::Value::Table(actual), expected);
 }

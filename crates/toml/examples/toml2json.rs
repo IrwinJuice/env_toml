@@ -3,7 +3,7 @@ use std::io;
 use std::io::prelude::*;
 
 use serde_json::Value as Json;
-use toml::Value as Toml;
+use env_toml::Value as Toml;
 
 fn main() {
     let mut args = env::args();

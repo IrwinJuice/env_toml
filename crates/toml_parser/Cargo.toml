@@ -1,9 +1,9 @@
 [package]
 name = "toml_parser"
-version = "1.1.2+spec-1.1.0"
-description = "Yet another format-preserving TOML parser."
+version = "0.1.0+base-1.1.2"
+description = "TOML parser with Environment Variables."
 categories = ["encoding", "parser-implementations", "parsing", "config"]
-keywords = ["encoding", "toml", "no_std"]
+keywords = ["encoding", "toml", "env", "environment"]
 repository.workspace = true
 license.workspace = true
 edition.workspace = true
