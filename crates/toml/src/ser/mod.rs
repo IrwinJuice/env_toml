@@ -58,7 +58,7 @@ pub use value::ValueSerializer;
 ///     },
 /// };
 ///
-/// let toml = toml::to_string(&config).unwrap();
+/// let toml = env_toml::to_string(&config).unwrap();
 /// println!("{}", toml)
 /// ```
 #[cfg(feature = "display")]

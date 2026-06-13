@@ -23,7 +23,7 @@ empty_default = ${EMPTY_VAL:}
         empty_default: String,
     }
 
-    let config: Config = toml::from_str(toml_str).expect("failed to parse TOML");
+    let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
 
     assert_eq!(config.db_url, "postgres://localhost:5432");
     assert_eq!(config.db_port, 9090);
@@ -41,7 +41,7 @@ fn test_env_var_missing() {
         db_url: String,
     }
 
-    let result: Result<Config, toml::de::Error> = toml::from_str(toml_str);
+    let result: Result<Config, env_toml::de::Error> = env_toml::from_str(toml_str);
     assert!(result.is_err());
     assert!(result.unwrap_err().to_string().contains("environment variable `MISSING_VAL` not set"));
 }
@@ -62,7 +62,7 @@ list = [ ${VAL1}, ${VAL2:c}, ${VAL3:d} ]
         list: Vec<String>,
     }
 
-    let config: Config = toml::from_str(toml_str).unwrap();
+    let config: Config = env_toml::from_str(toml_str).unwrap();
     assert_eq!(config.list, vec!["a", "b", "d"]);
 }
 
@@ -85,7 +85,7 @@ key = ${KEY1}
         key: String,
     }
 
-    let config: Config = toml::from_str(toml_str).unwrap();
+    let config: Config = env_toml::from_str(toml_str).unwrap();
     assert_eq!(config.table.key, "value1");
 }
 
@@ -116,7 +116,7 @@ port_s  = ${PORT}
         port_s: String,
     }
 
-    let config: Config = toml::from_str(toml_str).expect("failed to parse TOML");
+    let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
 
     assert_eq!(config.port, 8080);
     assert!((config.timeout - 3.14).abs() < f64::EPSILON);
@@ -147,7 +147,7 @@ bare_s = ${VAR_BARE}
         bare_s: String,
     }
 
-    let config: Config = toml::from_str(toml_str).expect("failed to parse TOML");
+    let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
 
     // visit_env_var_value should fall back to the raw string for arrays/tables
     // and for non-TOML bare words.
@@ -162,7 +162,7 @@ bare_s = ${VAR_BARE}
         arr_s: Vec<i64>,
     }
 
-    let res: Result<SeqConfig, toml::de::Error> = toml::from_str(r#"arr_s = ${VAR_ARRAY}"#);
+    let res: Result<SeqConfig, env_toml::de::Error> = env_toml::from_str(r#"arr_s = ${VAR_ARRAY}"#);
     assert!(res.is_err());
 }
 

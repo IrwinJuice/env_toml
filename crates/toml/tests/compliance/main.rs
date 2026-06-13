@@ -4,7 +4,7 @@
 
 macro_rules! parse_value {
     ($s:expr) => {{
-        let v = $s.parse::<toml::Value>();
+        let v = $s.parse::<env_toml::Value>();
         assert!(
             v.is_ok(),
             "Failed with `{}` when parsing:
@@ -22,5 +22,5 @@ macro_rules! parse_value {
 mod invalid;
 mod parse;
 
-use toml::Table as RustDocument;
-use toml::Value as RustValue;
+use env_toml::Table as RustDocument;
+use env_toml::Value as RustValue;

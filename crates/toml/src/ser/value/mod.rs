@@ -54,7 +54,7 @@ pub(crate) use map::*;
 /// let mut value = String::new();
 /// serde::Serialize::serialize(
 ///     &config,
-///     toml::ser::ValueSerializer::new(&mut value)
+///     env_toml::ser::ValueSerializer::new(&mut value)
 /// ).unwrap();
 /// println!("{}", value)
 /// ```

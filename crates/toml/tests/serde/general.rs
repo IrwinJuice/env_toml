@@ -47,7 +47,7 @@ macro_rules! equivalent {
         assert_eq!(literal, t!(toml.clone().try_into()));
 
         println!("Value::Table(toml).try_into()");
-        assert_eq!(literal, t!(toml::Value::Table(toml.clone()).try_into()));
+        assert_eq!(literal, t!(env_toml::Value::Table(toml.clone()).try_into()));
     }};
 }
 
@@ -1214,14 +1214,14 @@ Foo {
     // In/out of Value is equivalent
     println!("Table::try_from(literal)");
     assert_data_eq!(
-        toml::Table::try_from(literal.clone())
+        env_toml::Table::try_from(literal.clone())
             .unwrap_err()
             .to_string(),
         str!["u64 value was too large"].raw()
     );
     println!("Value::try_from(literal)");
     assert_data_eq!(
-        toml::Value::try_from(literal.clone())
+        env_toml::Value::try_from(literal.clone())
             .unwrap_err()
             .to_string(),
         str!["u64 value was too large"].raw()
@@ -1277,14 +1277,14 @@ Foo {
     // In/out of Value is equivalent
     println!("Table::try_from(literal)");
     assert_data_eq!(
-        toml::Table::try_from(literal.clone())
+        env_toml::Table::try_from(literal.clone())
             .unwrap_err()
             .to_string(),
         str!["i128 is not supported"].raw()
     );
     println!("Value::try_from(literal)");
     assert_data_eq!(
-        toml::Value::try_from(literal.clone())
+        env_toml::Value::try_from(literal.clone())
             .unwrap_err()
             .to_string(),
         str!["i128 is not supported"].raw()
@@ -1340,14 +1340,14 @@ Foo {
     // In/out of Value is equivalent
     println!("Table::try_from(literal)");
     assert_data_eq!(
-        toml::Table::try_from(literal.clone())
+        env_toml::Table::try_from(literal.clone())
             .unwrap_err()
             .to_string(),
         str!["i128 is not supported"].raw()
     );
     println!("Value::try_from(literal)");
     assert_data_eq!(
-        toml::Value::try_from(literal.clone())
+        env_toml::Value::try_from(literal.clone())
             .unwrap_err()
             .to_string(),
         str!["i128 is not supported"].raw()
@@ -1403,14 +1403,14 @@ Foo {
     // In/out of Value is equivalent
     println!("Table::try_from(literal)");
     assert_data_eq!(
-        toml::Table::try_from(literal.clone())
+        env_toml::Table::try_from(literal.clone())
             .unwrap_err()
             .to_string(),
         str!["u128 is not supported"].raw()
     );
     println!("Value::try_from(literal)");
     assert_data_eq!(
-        toml::Value::try_from(literal.clone())
+        env_toml::Value::try_from(literal.clone())
             .unwrap_err()
             .to_string(),
         str!["u128 is not supported"].raw()

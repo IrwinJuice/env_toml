@@ -59,7 +59,7 @@ use crate::alloc_prelude::*;
 ///     name: String,
 /// }
 ///
-/// let config: Config = toml::from_str(r#"
+/// let config: Config = env_toml::from_str(r#"
 ///     title = 'TOML Example'
 ///
 ///     [owner]
