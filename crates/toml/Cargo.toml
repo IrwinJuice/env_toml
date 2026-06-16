@@ -94,5 +94,9 @@ required-features = ["parse", "display", "serde"]
 name = "toml2json"
 required-features = ["parse", "display", "serde"]
 
+[[example]]
+name = "env_var"
+required-features = ["parse", "display", "serde"]
+
 [lints]
 workspace = true
