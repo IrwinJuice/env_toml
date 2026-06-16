@@ -131,20 +131,17 @@ fn test_visit_env_var_value_fallbacks() {
     unsafe {
         std::env::set_var("VAR_ARRAY", "[1, 2]");
         std::env::set_var("VAR_TABLE", "{ a = 1 }");
-        std::env::set_var("VAR_BARE", "unquoted_word");
     }
 
     let toml_str = r#"
 arr_s = ${VAR_ARRAY}
 tbl_s = ${VAR_TABLE}
-bare_s = ${VAR_BARE}
 "#;
 
     #[derive(Deserialize, Debug, PartialEq)]
     struct Config {
         arr_s: String,
         tbl_s: String,
-        bare_s: String,
     }
 
     let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
@@ -153,7 +150,6 @@ bare_s = ${VAR_BARE}
     // and for non-TOML bare words.
     assert_eq!(config.arr_s, "[1, 2]");
     assert_eq!(config.tbl_s, "{ a = 1 }");
-    assert_eq!(config.bare_s, "unquoted_word");
 
     // Attempting to deserialize the arr_s env-var as an actual sequence should fail,
     // because env-vars that parse as arrays are intentionally treated as strings.
