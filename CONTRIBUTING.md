@@ -3,6 +3,10 @@
 Thanks for wanting to contribute! There are many ways to contribute and we
 appreciate any level you're willing to do.
 
+> ⚠️ If your bug report or feature idea is not related to Environment Variables,
+please open it in the original toml crate.
+This project is entirely based on and follows the upstream toml repository.
+
 ## Feature Requests
 
 Need some new functionality to help?  You can let us know by opening an
@@ -82,6 +86,6 @@ When we're ready to release, a project owner should do the following
 2. Determine what the next version is, according to semver
 3. Run [`cargo release -x <level>`](https://github.com/crate-ci/cargo-release)
 
-[issues]: https://github.com/toml-rs/toml/issues
-[new issue]: https://github.com/toml-rs/toml/issues/new
-[all issues]: https://github.com/toml-rs/toml/issues?utf8=%E2%9C%93&q=is%3Aissue
+[issues]: https://github.com/IrwinJuice/env_toml/issues
+[new issue]: https://github.com/IrwinJuice/env_toml/issues/new
+[all issues]: https://github.com/IrwinJuice/env_toml/issues?utf8=%E2%9C%93&q=is%3Aissue
