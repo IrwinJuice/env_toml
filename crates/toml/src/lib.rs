@@ -148,6 +148,11 @@
 #![cfg_attr(feature = "default", doc = " ```")]
 //! use serde::Deserialize;
 //!
+//!  unsafe {
+//!      std::env::set_var("DB_URL", "postgres://localhost:5432");
+//!      std::env::set_var("DB_PORT", "9090");
+//!      std::env::set_var("EMPTY_VAL", "");
+//!  }
 //!   let toml_str = r#"
 //!   db_url = ${DB_URL}
 //!   db_port = ${DB_PORT:8080}
