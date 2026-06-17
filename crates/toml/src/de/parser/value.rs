@@ -15,7 +15,7 @@ use crate::de::parser::prelude::*;
 /// ```
 pub(crate) fn value<'i>(
     input: &mut Input<'_>,
-    source: toml_parser::Source<'i>,
+    source: env_toml_parser::Source<'i>,
     errors: &mut dyn ErrorSink,
 ) -> Spanned<DeValue<'i>> {
     #[cfg(feature = "debug")]
@@ -67,8 +67,8 @@ pub(crate) fn value<'i>(
 }
 
 pub(crate) fn on_env_var<'i>(
-    event: &toml_parser::parser::Event,
-    source: toml_parser::Source<'i>,
+    event: &env_toml_parser::parser::Event,
+    source: env_toml_parser::Source<'i>,
     _errors: &mut dyn ErrorSink,
 ) -> Spanned<DeValue<'i>> {
     #[cfg(feature = "debug")]
@@ -96,8 +96,8 @@ pub(crate) fn on_env_var<'i>(
 }
 
 pub(crate) fn on_scalar<'i>(
-    event: &toml_parser::parser::Event,
-    source: toml_parser::Source<'i>,
+    event: &env_toml_parser::parser::Event,
+    source: env_toml_parser::Source<'i>,
     errors: &mut dyn ErrorSink,
 ) -> Spanned<DeValue<'i>> {
     #[cfg(feature = "debug")]
@@ -109,13 +109,13 @@ pub(crate) fn on_scalar<'i>(
     let mut decoded = Cow::Borrowed("");
     let kind = raw.decode_scalar(&mut decoded, errors);
     match kind {
-        toml_parser::decoder::ScalarKind::String => {
+        env_toml_parser::decoder::ScalarKind::String => {
             Spanned::new(value_span, DeValue::String(decoded))
         }
-        toml_parser::decoder::ScalarKind::Boolean(value) => {
+        env_toml_parser::decoder::ScalarKind::Boolean(value) => {
             Spanned::new(value_span, DeValue::Boolean(value))
         }
-        toml_parser::decoder::ScalarKind::DateTime => {
+        env_toml_parser::decoder::ScalarKind::DateTime => {
             let value = match decoded.parse::<toml_datetime::Datetime>() {
                 Ok(value) => value,
                 Err(err) => {
@@ -131,10 +131,10 @@ pub(crate) fn on_scalar<'i>(
             };
             Spanned::new(value_span, DeValue::Datetime(value))
         }
-        toml_parser::decoder::ScalarKind::Float => {
+        env_toml_parser::decoder::ScalarKind::Float => {
             Spanned::new(value_span, DeValue::Float(DeFloat { inner: decoded }))
         }
-        toml_parser::decoder::ScalarKind::Integer(radix) => Spanned::new(
+        env_toml_parser::decoder::ScalarKind::Integer(radix) => Spanned::new(
             value_span,
             DeValue::Integer(DeInteger {
                 inner: decoded,

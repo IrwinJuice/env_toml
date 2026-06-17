@@ -77,7 +77,6 @@ For code organization, we recommend
 
 Pre-requisites
 - Running `cargo login`
-- A member of `github:toml-rs:maintainers`
 - Push permission to the repo
 - [`cargo-release`](https://github.com/crate-ci/cargo-release/)
 

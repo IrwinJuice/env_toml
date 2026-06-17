@@ -1,5 +1,5 @@
 [package]
-name = "toml_parser"
+name = "env_toml_parser"
 version = "0.1.0+upstream-1.1.2"
 description = "TOML parser with Environment Variables."
 categories = ["encoding", "parser-implementations", "parsing", "config"]
@@ -20,7 +20,7 @@ pre-release-replacements = [
     { file = "CHANGELOG.md", search = "\\.\\.\\.HEAD", replace = "...{{tag_name}}", exactly = 1 },
     { file = "CHANGELOG.md", search = "ReleaseDate", replace = "{{date}}", min = 1 },
     { file = "CHANGELOG.md", search = "<!-- next-header -->", replace = "<!-- next-header -->\n## [Unreleased] - ReleaseDate\n", exactly = 1 },
-    { file = "CHANGELOG.md", search = "<!-- next-url -->", replace = "<!-- next-url -->\n[Unreleased]: https://github.com/toml-rs/toml/compare/{{tag_name}}...HEAD", exactly = 1 },
+    { file = "CHANGELOG.md", search = "<!-- next-url -->", replace = "<!-- next-url -->\n[Unreleased]: https://github.com/IrwinJuice/env_toml/compare/{{tag_name}}...HEAD", exactly = 1 },
 ]
 
 [features]

@@ -21,7 +21,7 @@ use crate::map::Entry;
 /// ```
 pub(crate) fn document<'i>(
     input: &mut Input<'_>,
-    source: toml_parser::Source<'i>,
+    source: env_toml_parser::Source<'i>,
     errors: &mut dyn ErrorSink,
 ) -> Spanned<DeTable<'i>> {
     #[cfg(feature = "debug")]
@@ -108,9 +108,9 @@ pub(crate) fn document<'i>(
 /// array-table = array-table-open key *( table-key-sep key) array-table-close
 /// ```
 fn on_table<'i>(
-    open_event: &toml_parser::parser::Event,
+    open_event: &env_toml_parser::parser::Event,
     input: &mut Input<'_>,
-    source: toml_parser::Source<'i>,
+    source: env_toml_parser::Source<'i>,
     errors: &mut dyn ErrorSink,
 ) -> TableHeader<'i> {
     #[cfg(feature = "debug")]
@@ -177,7 +177,7 @@ fn on_table<'i>(
 struct TableHeader<'i> {
     path: Vec<Spanned<DeString<'i>>>,
     key: Option<Spanned<DeString<'i>>>,
-    span: toml_parser::Span,
+    span: env_toml_parser::Span,
     is_array: bool,
 }
 
@@ -190,7 +190,7 @@ struct State<'i> {
 }
 
 impl<'i> State<'i> {
-    fn capture_trailing(&mut self, _event: &toml_parser::parser::Event) {}
+    fn capture_trailing(&mut self, _event: &env_toml_parser::parser::Event) {}
 
     fn capture_key_value(
         &mut self,
@@ -299,7 +299,7 @@ impl<'i> State<'i> {
                     );
                     let key_span = get_key_span(key);
                     let old_span = entry.span();
-                    let old_span = toml_parser::Span::new_unchecked(old_span.start, old_span.end);
+                    let old_span = env_toml_parser::Span::new_unchecked(old_span.start, old_span.end);
                     errors.report_error(
                         ParseError::new("duplicate key")
                             .with_unexpected(key_span)
@@ -412,7 +412,7 @@ fn descend_path<'t, 'i>(
                     DeValue::Array(array) => {
                         if !array.is_array_of_tables() {
                             let old_span =
-                                toml_parser::Span::new_unchecked(old_span.start, old_span.end);
+                                env_toml_parser::Span::new_unchecked(old_span.start, old_span.end);
                             let key_span = get_key_span(key);
                             errors.report_error(
                                 ParseError::new(
@@ -433,7 +433,7 @@ fn descend_path<'t, 'i>(
                             DeValue::Table(table) => table,
                             existing => {
                                 let old_span =
-                                    toml_parser::Span::new_unchecked(old_span.start, old_span.end);
+                                    env_toml_parser::Span::new_unchecked(old_span.start, old_span.end);
                                 let key_span = get_key_span(key);
                                 errors.report_error(
                                     ParseError::new(format!(
@@ -492,7 +492,7 @@ fn descend_path<'t, 'i>(
                     }
                     existing => {
                         let old_span =
-                            toml_parser::Span::new_unchecked(old_span.start, old_span.end);
+                            env_toml_parser::Span::new_unchecked(old_span.start, old_span.end);
                         let key_span = get_key_span(key);
                         errors.report_error(
                             ParseError::new(format!(
@@ -511,7 +511,7 @@ fn descend_path<'t, 'i>(
     Some(table)
 }
 
-fn get_key_span(key: &Spanned<DeString<'_>>) -> toml_parser::Span {
+fn get_key_span(key: &Spanned<DeString<'_>>) -> env_toml_parser::Span {
     let key_span = key.span();
-    toml_parser::Span::new_unchecked(key_span.start, key_span.end)
+    env_toml_parser::Span::new_unchecked(key_span.start, key_span.end)
 }
