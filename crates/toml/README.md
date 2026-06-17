@@ -20,14 +20,14 @@ This crate extends TOML syntax with environment variable placeholders:
 db_url = ${DB_URL} # Required: Fails if not set
 db_port = ${DB_PORT:8080} # Optional: Defaults to 8080
 default_port = ${MISSING_PORT:8080}  # Optional: Defaults to 8080
-empty_default = ${ENV_VALUE:} # Optional: Defaults to empty string
+empty_default = ${ENV_VALUE:} # Optional: Defaults to `None` for optional fields, or an empty string for other types
 list = [ ${VAL1}, ${VAL2:c}, ${VAL3:d} ]
 ```
 
 ### Resolution rules
 - `${NAME}` reads the environment variable `NAME`
 - `${NAME:default}` uses `default` when `NAME` is not set
-- `${NAME:}` uses an __empty string__ as the fallback
+- `${NAME:}` uses `None` for optional fields, or an __empty string__ for other types when `NAME` is not set
 
 ### Type behavior
 After resolution, env-var values are reinterpreted as TOML scalars when appropriate:
@@ -43,8 +43,7 @@ If an env-var contains something that looks like an array or table, the parser f
 For example:
 
 ```rust
-std::env::set_var("VAR_ARRAY", "[1, 2]");
-std::env::set_var("VAR_TABLE", "{ a = 1 }");
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 struct Config {
@@ -52,19 +51,24 @@ struct Config {
     tbl_s: String,
 }
 
-let config: Config = env_toml::from_str(r#"
-arr_s = ${VAR_ARRAY}
-tbl_s = ${VAR_TABLE}
-"#).unwrap();
+fn main() {
+    unsafe {
+        std::env::set_var("VAR_ARRAY", "[1, 2]");
+        std::env::set_var("VAR_TABLE", "{ a = 1 }");
+    }
+    let config: Config = env_toml::from_str(r#"
+    arr_s = ${VAR_ARRAY}
+    tbl_s = ${VAR_TABLE}
+    "#).unwrap();
 
-assert_eq!(config.arr_s, "[1, 2]");
-assert_eq!(config.tbl_s, "{ a = 1 }");
+    assert_eq!(config.arr_s, "[1, 2]");
+    assert_eq!(config.tbl_s, "{ a = 1 }");
+}
 ```
 If you deserialize the same env-var into a structured type like `Vec<i64>`, it will fail.
 
 [serde]: https://serde.rs/
 [toml]: https://github.com/toml-lang/toml
-[toml_edit]: https://docs.rs/toml_edit
 [toml_crate]: https://crates.io/crates/toml
 
 ## License

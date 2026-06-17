@@ -12,7 +12,8 @@ fn test_env_var() {
 db_url = ${DB_URL}
 db_port = ${DB_PORT:8080}
 default_port = ${MISSING_PORT:8080}
-empty_default = ${EMPTY_VAL:}
+empty_string_default = ${EMPTY_VAL:}
+empty_option_default = ${EMPTY_VAL:}
 "#;
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -20,7 +21,8 @@ empty_default = ${EMPTY_VAL:}
         db_url: String,
         db_port: u16,
         default_port: u16,
-        empty_default: String,
+        empty_string_default: String,
+        empty_option_default: Option<u16>,
     }
 
     let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
@@ -28,7 +30,8 @@ empty_default = ${EMPTY_VAL:}
     assert_eq!(config.db_url, "postgres://localhost:5432");
     assert_eq!(config.db_port, 9090);
     assert_eq!(config.default_port, 8080);
-    assert_eq!(config.empty_default, "");
+    assert_eq!(config.empty_string_default, "");
+    assert_eq!(config.empty_option_default, None);
 }
 
 #[test]
@@ -163,3 +166,103 @@ tbl_s = ${VAR_TABLE}
 }
 
 
+#[test]
+fn test_env_var_optional_empty_default() {
+    unsafe { std::env::remove_var("OPTIONAL_VAL"); }
+    let toml_str = "opt = ${OPTIONAL_VAL:}";
+
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Config {
+        opt: Option<String>,
+    }
+
+    let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
+    assert_eq!(config.opt, None);
+}
+
+#[test]
+fn test_env_var_optional_u16_empty_default() {
+    unsafe { std::env::remove_var("OPTIONAL_PORT"); }
+    let toml_str = "port = ${OPTIONAL_PORT:}";
+
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Config {
+        port: Option<u16>,
+    }
+
+    let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
+    assert_eq!(config.port, None);
+}
+
+#[test]
+fn test_env_var_optional_no_default() {
+    unsafe { std::env::remove_var("OPTIONAL_VAL_2"); }
+    let toml_str = "opt = ${OPTIONAL_VAL_2}";
+
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Config {
+        opt: Option<String>,
+    }
+
+    let result: Result<Config, env_toml::de::Error> = env_toml::from_str(toml_str);
+    // Should still be an error if no default is provided and env var is missing
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_env_var_optional_with_default() {
+    unsafe { std::env::remove_var("OPTIONAL_VAL_3"); }
+    let toml_str = "opt = ${OPTIONAL_VAL_3:default}";
+
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Config {
+        opt: Option<String>,
+    }
+
+    let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
+    assert_eq!(config.opt, Some("default".to_string()));
+}
+
+#[test]
+fn test_env_var_non_optional_empty_default() {
+    unsafe { std::env::remove_var("NON_OPTIONAL_VAL"); }
+    let toml_str = "val = ${NON_OPTIONAL_VAL:}";
+
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Config {
+        val: String,
+    }
+
+    let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
+    // Should still be ""
+    assert_eq!(config.val, "");
+}
+
+#[test]
+fn test_env_var_optional_u16_present() {
+    unsafe { std::env::set_var("PRESENT_PORT", "9090"); }
+    let toml_str = "port = ${PRESENT_PORT:8080}";
+
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Config {
+        port: Option<u16>,
+    }
+
+    let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
+    assert_eq!(config.port, Some(9090));
+}
+
+#[test]
+fn test_env_var_set_to_empty_string() {
+    unsafe { std::env::set_var("SET_EMPTY_VAL", ""); }
+    let toml_str = "opt = ${SET_EMPTY_VAL:}";
+
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Config {
+        opt: Option<String>,
+    }
+
+    let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
+    // It should now be None
+    assert_eq!(config.opt, None);
+}

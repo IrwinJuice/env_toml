@@ -26,8 +26,9 @@
 //!
 //! ### Serialization vs. Deserialization
 //! It is important to note how environment variables interact with Serde's traits:
-//! * **Deserialization (Parsing):** Environment variable syntax (`${...}`) is fully supported and resolved when reading a TOML string into your Rust structures.
-//! * **Serialization (Writing):** Serializing Rust structures back into TOML works exactly like the upstream crate. However, **the environment variable syntax is not injected during serialization**. For example, if a struct field contains the value `"production"`, it will be written as a plain string `"production"`, not as `${ENV_TYPE}`.
+//! * **Deserialization (Parsing):** Environment variable syntax (`${...}`) is resolved when reading a TOML string into your Rust structures.
+//! * **Serialization (Writing):** Serializing Rust structures back into TOML works exactly like the upstream crate. However, **the environment variable syntax is not injected during serialization**.
+//! For example, if a struct field contains the value `"production"`, it will be written as a plain string `"production"`, not as `${ENV_TYPE}`.
 //!
 //! ### Platform & Standard Library Support
 //! Please note that resolving environment variables requires access to the operating system's
@@ -40,15 +41,14 @@
 //! ```toml
 //! db_url = ${DB_URL} # Required: Fails if not set
 //! db_port = ${DB_PORT:8080} # Optional: Defaults to 8080
-//! default_port = ${MISSING_PORT:8080}  # Optional: Defaults to 8080
-//! empty_default = ${ENV_VALUE:} # Optional: Defaults to empty string
+//! empty_default = ${ENV_VALUE:} # Optional: Defaults to `None` for optional fields, or an empty string for other types
 //! list = [ ${VAL1}, ${VAL2:c}, ${VAL3:d} ]
 //! ```
 //!
 //! ### Resolution rules
 //! - `${NAME}` reads the environment variable `NAME`
 //! - `${NAME:default}` uses `default` when `NAME` is not set
-//! - `${NAME:}` uses an __empty string__ as the fallback
+//! - `${NAME:}` uses `None` for optional fields, or an __empty string__ for other types when `NAME` is not set
 //!
 //! ### Type behavior
 //! After resolution, env-var values are reinterpreted as TOML scalars when appropriate:
@@ -63,8 +63,11 @@
 //!
 #![cfg_attr(not(feature = "default"), doc = " ```ignore")]
 #![cfg_attr(feature = "default", doc = " ```")]
-//!  std::env::set_var("VAR_ARRAY", "[1, 2]");
-//!  std::env::set_var("VAR_TABLE", "{ a = 1 }");
+//!  use serde::Deserialize;
+//!  unsafe {
+//!      std::env::set_var("VAR_ARRAY", "[1, 2]");
+//!      std::env::set_var("VAR_TABLE", "{ a = 1 }");
+//!  }
 //!
 //!  #[derive(Deserialize)]
 //!  struct Config {
@@ -149,7 +152,8 @@
 //!   db_url = ${DB_URL}
 //!   db_port = ${DB_PORT:8080}
 //!   default_port = ${MISSING_PORT:8080}
-//!   empty_default = ${EMPTY_VAL:}
+//!   empty_default_string = ${EMPTY_VAL:}
+//!   empty_option_default = ${EMPTY_VAL:}
 //!   "#;
 //!
 //!   #[derive(Deserialize)]
@@ -157,7 +161,8 @@
 //!       db_url: String,
 //!       db_port: u16,
 //!       default_port: u16,
-//!       empty_default: String,
+//!       empty_default_string: String,
+//!       empty_option_default: Option<u16>,
 //!   }
 //!
 //!   let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
@@ -165,8 +170,9 @@
 //!   assert_eq!(config.db_url, "postgres://localhost:5432");
 //!   assert_eq!(config.db_port, 9090);
 //!   assert_eq!(config.default_port, 8080);
-//!   assert_eq!(config.empty_default, "");
-//!
+//!   assert_eq!(config.empty_default_string, "");
+//!   assert_eq!(config.empty_option_default, None);
+//! ```
 //! You can serialize types in a similar fashion:
 //!
 #![cfg_attr(not(feature = "default"), doc = " ```ignore")]
@@ -202,6 +208,7 @@
 //! [Cargo]: https://crates.io/
 //! [`serde`]: https://serde.rs/
 //! [serde]: https://serde.rs/
+//! [toml_crate]: https://crates.io/crates/toml
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]
