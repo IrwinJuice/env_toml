@@ -1,4 +1,4 @@
-//! A [serde]-compatible [TOML]-parsing library
+//! A [serde]-compatible [TOML]-parsing library extended with Environment Variable syntax
 //!
 //! TOML itself is a simple, ergonomic, and readable configuration format:
 //!
@@ -12,6 +12,20 @@
 //!
 //! The TOML format tends to be relatively common throughout the Rust community
 //! for configuration, notably being used by [Cargo], Rust's package manager.
+//!
+//! ### Why this crate?
+//! While standard TOML is great, configuration files often need to dynamically adapt to
+//! different environments (e.g., development, staging, production). The official TOML
+//! specification and upstream implementation do not natively support environment variables.
+//!
+//! This crate bridges that gap by allowing you to inject environment variables directly into
+//! your TOML files using a clean syntax (e.g., `${MY_ENV_VAR}`), while remaining fully
+//! compatible with [serde].
+//!
+//! ### Platform & Standard Library Support
+//! Please note that resolving environment variables requires access to the operating system's
+//! environment via the Rust standard library (`std`). Consequently, **this crate requires `std`**
+//! and cannot be used in strict `#![no_std]` environments where standard library access is unavailable.
 //!
 //! ## TOML values
 //!
