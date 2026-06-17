@@ -16,9 +16,9 @@ use crate::map::Entry;
 /// inline-table = inline-table-open [ inline-table-keyvals ] ws-comment-newline inline-table-close
 /// ```
 pub(crate) fn on_inline_table<'i>(
-    open_event: &toml_parser::parser::Event,
+    open_event: &env_toml_parser::parser::Event,
     input: &mut Input<'_>,
-    source: toml_parser::Source<'i>,
+    source: env_toml_parser::Source<'i>,
     errors: &mut dyn ErrorSink,
 ) -> Spanned<DeValue<'i>> {
     #[cfg(feature = "debug")]
@@ -102,11 +102,11 @@ struct State<'i> {
 }
 
 impl<'i> State<'i> {
-    fn whitespace(&mut self, _event: &toml_parser::parser::Event) {}
+    fn whitespace(&mut self, _event: &env_toml_parser::parser::Event) {}
 
     fn capture_key(
         &mut self,
-        _event: &toml_parser::parser::Event,
+        _event: &env_toml_parser::parser::Event,
         path: Vec<Spanned<DeString<'i>>>,
         key: Option<Spanned<DeString<'i>>>,
     ) {
@@ -117,13 +117,13 @@ impl<'i> State<'i> {
         }
     }
 
-    fn finish_key(&mut self, _event: &toml_parser::parser::Event) {
+    fn finish_key(&mut self, _event: &env_toml_parser::parser::Event) {
         #[cfg(feature = "debug")]
         let _scope = TraceScope::new("inline_table::finish_key");
         self.seen_keyval_sep = true;
     }
 
-    fn capture_value(&mut self, _event: &toml_parser::parser::Event, value: Spanned<DeValue<'i>>) {
+    fn capture_value(&mut self, _event: &env_toml_parser::parser::Event, value: Spanned<DeValue<'i>>) {
         #[cfg(feature = "debug")]
         let _scope = TraceScope::new("inline_table::capture_value");
         self.current_value = Some(value);
@@ -131,7 +131,7 @@ impl<'i> State<'i> {
 
     fn finish_value(
         &mut self,
-        _event: &toml_parser::parser::Event,
+        _event: &env_toml_parser::parser::Event,
         result: &mut DeTable<'i>,
         errors: &mut dyn ErrorSink,
     ) {
@@ -181,8 +181,8 @@ impl<'i> State<'i> {
 
     fn close(
         &mut self,
-        _open_event: &toml_parser::parser::Event,
-        _close_event: &toml_parser::parser::Event,
+        _open_event: &env_toml_parser::parser::Event,
+        _close_event: &env_toml_parser::parser::Event,
         _result: &mut DeTable<'i>,
     ) {
         #[cfg(feature = "debug")]
@@ -256,7 +256,7 @@ fn descend_path<'a, 'i>(
                     }
                     existing => {
                         let old_span =
-                            toml_parser::Span::new_unchecked(old_span.start, old_span.end);
+                            env_toml_parser::Span::new_unchecked(old_span.start, old_span.end);
                         let key_span = get_key_span(key);
                         errors.report_error(
                             ParseError::new(format!(
@@ -275,7 +275,7 @@ fn descend_path<'a, 'i>(
     Some(table)
 }
 
-fn get_key_span(key: &Spanned<DeString<'_>>) -> toml_parser::Span {
+fn get_key_span(key: &Spanned<DeString<'_>>) -> env_toml_parser::Span {
     let key_span = key.span();
-    toml_parser::Span::new_unchecked(key_span.start, key_span.end)
+    env_toml_parser::Span::new_unchecked(key_span.start, key_span.end)
 }

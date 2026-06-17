@@ -153,6 +153,7 @@ version = "0.1.0+upstream-1.1.2"
 dependencies = [
  "anstream 1.0.0",
  "anstyle",
+ "env_toml_parser",
  "foldhash",
  "indexmap",
  "itertools",
@@ -165,9 +166,19 @@ dependencies = [
  "toml-test-data",
  "toml-test-harness",
  "toml_datetime",
- "toml_parser",
  "toml_writer",
  "walkdir",
+ "winnow",
+]
+
+[[package]]
+name = "env_toml_parser"
+version = "0.1.0+upstream-1.1.2"
+dependencies = [
+ "anstream 1.0.0",
+ "anstyle",
+ "snapbox",
+ "toml_datetime",
  "winnow",
 ]
 
@@ -579,17 +590,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3165f65f62e28e0115a00b2ebdd37eb6f3b641855f9d636d3cd4103767159ad7"
 dependencies = [
  "serde_core",
-]
-
-[[package]]
-name = "toml_parser"
-version = "0.1.0+upstream-1.1.2"
-dependencies = [
- "anstream 1.0.0",
- "anstyle",
- "snapbox",
- "toml_datetime",
- "winnow",
 ]
 
 [[package]]

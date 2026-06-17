@@ -1,7 +1,7 @@
 use snapbox::file;
 
-use toml_parser::Source;
-use toml_parser::parser::*;
+use env_toml_parser::Source;
+use env_toml_parser::parser::*;
 
 #[track_caller]
 fn t(input: &str, expected: impl snapbox::data::IntoData) {
