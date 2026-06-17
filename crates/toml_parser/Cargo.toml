@@ -1,6 +1,6 @@
 [package]
 name = "toml_parser"
-version = "0.1.0+base-1.1.2"
+version = "0.1.0+upstream-1.1.2"
 description = "TOML parser with Environment Variables."
 categories = ["encoding", "parser-implementations", "parsing", "config"]
 keywords = ["encoding", "toml", "env", "environment"]
