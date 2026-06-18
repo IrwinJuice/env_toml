@@ -10,6 +10,7 @@ struct Config {
     db_url: String,
     db_port: u16,
     default_port: u16,
+    option_value: Option<u16>,
     empty_default: String,
     empty_option_default: Option<u16>,
     port_s: String,
@@ -21,6 +22,7 @@ fn main() {
     unsafe {
         std::env::set_var("DB_URL", "postgres://localhost:5432");
         std::env::set_var("DB_PORT", "9090");
+        std::env::set_var("OPTION_VAL", "10");
         std::env::set_var("EMPTY_VAL", "");
         std::env::set_var("PORT", "8080");
         std::env::set_var("VAR_ARRAY", "[1, 2]");
@@ -31,6 +33,7 @@ fn main() {
         db_url = ${DB_URL}
         db_port = ${DB_PORT:8080}
         default_port = ${MISSING_PORT:8080}
+        option_value = ${OPTION_VAL:}
         empty_default = ${EMPTY_VAL:}
         empty_option_default = ${EMPTY_VAL:}
         port_s = ${PORT}
@@ -44,6 +47,7 @@ fn main() {
     assert_eq!(config.db_url, "postgres://localhost:5432");
     assert_eq!(config.db_port, 9090);
     assert_eq!(config.default_port, 8080);
+    assert_eq!(config.option_value, Some(10));
     assert_eq!(config.empty_default, "");
     assert_eq!(config.empty_option_default, None);
     assert_eq!(config.port_s, "8080");
