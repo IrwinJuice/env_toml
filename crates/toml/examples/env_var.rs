@@ -11,6 +11,7 @@ struct Config {
     db_port: u16,
     default_port: u16,
     empty_default: String,
+    empty_option_default: Option<u16>,
     port_s: String,
     arr_s: String,
     tbl_s: String,
@@ -31,6 +32,7 @@ fn main() {
         db_port = ${DB_PORT:8080}
         default_port = ${MISSING_PORT:8080}
         empty_default = ${EMPTY_VAL:}
+        empty_option_default = ${EMPTY_VAL:}
         port_s = ${PORT}
         arr_s = ${VAR_ARRAY}
         tbl_s = ${VAR_TABLE}
@@ -43,6 +45,7 @@ fn main() {
     assert_eq!(config.db_port, 9090);
     assert_eq!(config.default_port, 8080);
     assert_eq!(config.empty_default, "");
+    assert_eq!(config.empty_option_default, None);
     assert_eq!(config.port_s, "8080");
     assert_eq!(config.arr_s, "[1, 2]");
     assert_eq!(config.tbl_s, "{ a = 1 }");
