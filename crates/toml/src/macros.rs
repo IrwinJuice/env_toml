@@ -6,7 +6,7 @@ use crate::value::{Array, Table, Value};
 /// Construct a [`Table`] from TOML syntax.
 ///
 /// ```rust
-/// let cargo_toml = toml::toml! {
+/// let cargo_toml = env_toml::toml! {
 ///     [package]
 ///     name = "toml"
 ///
@@ -33,7 +33,7 @@ macro_rules! toml {
     }};
 }
 
-// TT-muncher to parse TOML syntax into a toml::Value.
+// TT-muncher to parse TOML syntax into a env_toml::Value.
 //
 //    @toplevel -- Parse tokens outside of an inline table or inline array. In
 //                 this state, `[table headers]` and `[[array headers]]` are
@@ -50,13 +50,13 @@ macro_rules! toml {
 //                 primitive or inline table or inline array.
 //
 //    @table -- Parse the contents of an inline table, returning them as a
-//                 toml::Value::Table.
+//                 env_toml::Value::Table.
 //
 //    @tabledatetime -- Helper to parse a Datetime from string and insert it
 //                 into a table, continuing in the @table state.
 //
 //    @array -- Parse the contents of an inline array, returning them as a
-//                 toml::Value::Array.
+//                 env_toml::Value::Array.
 //
 //    @arraydatetime -- Helper to parse a Datetime from string and push it into
 //                 an array, continuing in the @array state.

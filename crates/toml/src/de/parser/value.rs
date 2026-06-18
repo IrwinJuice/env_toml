@@ -1,3 +1,4 @@
+use alloc::borrow::Cow;
 use serde_spanned::Spanned;
 
 use crate::alloc_prelude::*;
@@ -5,6 +6,7 @@ use crate::de::DeFloat;
 use crate::de::DeInteger;
 use crate::de::DeValue;
 use crate::de::parser::array::on_array;
+use crate::de::parser::devalue::DeEnvVar;
 use crate::de::parser::inline_table::on_inline_table;
 use crate::de::parser::prelude::*;
 
@@ -13,7 +15,7 @@ use crate::de::parser::prelude::*;
 /// ```
 pub(crate) fn value<'i>(
     input: &mut Input<'_>,
-    source: toml_parser::Source<'i>,
+    source: env_toml_parser::Source<'i>,
     errors: &mut dyn ErrorSink,
 ) -> Spanned<DeValue<'i>> {
     #[cfg(feature = "debug")]
@@ -55,15 +57,47 @@ pub(crate) fn value<'i>(
             EventKind::Scalar => {
                 return on_scalar(event, source, errors);
             }
+            EventKind::EnvVar => {
+                return on_env_var(event, source, errors);
+            }
         }
     }
 
     Spanned::new(0..0, DeValue::Integer(Default::default()))
 }
 
+pub(crate) fn on_env_var<'i>(
+    event: &env_toml_parser::parser::Event,
+    source: env_toml_parser::Source<'i>,
+    _errors: &mut dyn ErrorSink,
+) -> Spanned<DeValue<'i>> {
+    #[cfg(feature = "debug")]
+    let _scope = TraceScope::new("on_env_var");
+    let span = event.span();
+    let raw = source.get(event).unwrap();
+
+    let s = raw.as_str();
+    debug_assert!(s.starts_with("${"));
+    debug_assert!(s.ends_with('}'));
+    let s = &s[2..s.len() - 1];
+
+    let (name, default) = match s.split_once(':') {
+        Some((name, default)) => (name, Some(Cow::Borrowed(default))),
+        None => (s, None),
+    };
+
+    Spanned::new(
+        span.start()..span.end(),
+        DeValue::EnvVar(DeEnvVar {
+            name: Cow::Borrowed(name),
+            default,
+        }),
+    )
+}
+
 pub(crate) fn on_scalar<'i>(
-    event: &toml_parser::parser::Event,
-    source: toml_parser::Source<'i>,
+    event: &env_toml_parser::parser::Event,
+    source: env_toml_parser::Source<'i>,
     errors: &mut dyn ErrorSink,
 ) -> Spanned<DeValue<'i>> {
     #[cfg(feature = "debug")]
@@ -72,16 +106,16 @@ pub(crate) fn on_scalar<'i>(
     let value_span = value_span.start()..value_span.end();
 
     let raw = source.get(event).unwrap();
-    let mut decoded = alloc::borrow::Cow::Borrowed("");
+    let mut decoded = Cow::Borrowed("");
     let kind = raw.decode_scalar(&mut decoded, errors);
     match kind {
-        toml_parser::decoder::ScalarKind::String => {
+        env_toml_parser::decoder::ScalarKind::String => {
             Spanned::new(value_span, DeValue::String(decoded))
         }
-        toml_parser::decoder::ScalarKind::Boolean(value) => {
+        env_toml_parser::decoder::ScalarKind::Boolean(value) => {
             Spanned::new(value_span, DeValue::Boolean(value))
         }
-        toml_parser::decoder::ScalarKind::DateTime => {
+        env_toml_parser::decoder::ScalarKind::DateTime => {
             let value = match decoded.parse::<toml_datetime::Datetime>() {
                 Ok(value) => value,
                 Err(err) => {
@@ -97,10 +131,10 @@ pub(crate) fn on_scalar<'i>(
             };
             Spanned::new(value_span, DeValue::Datetime(value))
         }
-        toml_parser::decoder::ScalarKind::Float => {
+        env_toml_parser::decoder::ScalarKind::Float => {
             Spanned::new(value_span, DeValue::Float(DeFloat { inner: decoded }))
         }
-        toml_parser::decoder::ScalarKind::Integer(radix) => Spanned::new(
+        env_toml_parser::decoder::ScalarKind::Integer(radix) => Spanned::new(
             value_span,
             DeValue::Integer(DeInteger {
                 inner: decoded,

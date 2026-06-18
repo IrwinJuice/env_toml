@@ -9,9 +9,9 @@ use crate::de::parser::prelude::*;
 /// dotted-key = simple-key 1*( dot-sep simple-key )
 /// ```
 pub(crate) fn on_key<'i>(
-    key_event: &toml_parser::parser::Event,
+    key_event: &env_toml_parser::parser::Event,
     input: &mut Input<'_>,
-    source: toml_parser::Source<'i>,
+    source: env_toml_parser::Source<'i>,
     errors: &mut dyn ErrorSink,
 ) -> (Vec<Spanned<DeString<'i>>>, Option<Spanned<DeString<'i>>>) {
     #[cfg(feature = "debug")]
@@ -30,6 +30,7 @@ pub(crate) fn on_key<'i>(
                 | EventKind::ArrayOpen
                 | EventKind::ArrayClose
                 | EventKind::Scalar
+                | EventKind::EnvVar
                 | EventKind::ValueSep
                 | EventKind::Comment
                 | EventKind::Newline
@@ -85,23 +86,23 @@ fn more_key(input: &Input<'_>) -> bool {
 }
 
 struct State {
-    current_key: Option<toml_parser::parser::Event>,
+    current_key: Option<env_toml_parser::parser::Event>,
 }
 
 impl State {
-    fn new(key_event: &toml_parser::parser::Event) -> Self {
+    fn new(key_event: &env_toml_parser::parser::Event) -> Self {
         Self {
             current_key: Some(*key_event),
         }
     }
 
-    fn whitespace(&mut self, _event: &toml_parser::parser::Event) {}
+    fn whitespace(&mut self, _event: &env_toml_parser::parser::Event) {}
 
     fn close_key<'i>(
         &mut self,
         result_path: &mut Vec<Spanned<DeString<'i>>>,
         result_key: &mut Option<Spanned<DeString<'i>>>,
-        source: toml_parser::Source<'i>,
+        source: env_toml_parser::Source<'i>,
         errors: &mut dyn ErrorSink,
     ) {
         let Some(key) = self.current_key.take() else {

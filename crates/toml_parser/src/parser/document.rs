@@ -100,9 +100,15 @@ type Stream<'i> = TokenSlice<'i, Token>;
 ///
 /// keyval = key keyval-sep val
 /// key = simple-key / dotted-key
-/// val = string / boolean / array / inline-table / date-time / float / integer
+/// val = string / boolean / array / inline-table / date-time / float / integer / env-var
 ///
 /// simple-key = quoted-key / unquoted-key
+///
+/// ;; EnvVar
+///
+/// env-var = "$" "{" env-name [ ":" [ env-default ] ] "}"
+/// env-name = 1*atom
+/// env-default = string / boolean / float / integer
 ///
 /// ;; Quoted and dotted key
 ///
@@ -188,7 +194,11 @@ fn document(tokens: &mut Stream<'_>, receiver: &mut dyn EventReceiver, error: &m
             TokenKind::Dot => {
                 on_expression_dot(tokens, current_token, receiver, error);
             }
-            TokenKind::Comma | TokenKind::RightCurlyBracket | TokenKind::LeftCurlyBracket => {
+            TokenKind::Comma
+            | TokenKind::RightCurlyBracket
+            | TokenKind::LeftCurlyBracket
+            | TokenKind::DollarSign
+            | TokenKind::Colon => {
                 on_missing_expression_key(tokens, current_token, receiver, error);
             }
             TokenKind::Whitespace => receiver.whitespace(current_token.span(), error),
@@ -323,6 +333,8 @@ fn key(
             | TokenKind::Comment
             | TokenKind::Equals
             | TokenKind::Comma
+            | TokenKind::DollarSign
+            | TokenKind::Colon
             | TokenKind::LeftSquareBracket
             | TokenKind::LeftCurlyBracket
             | TokenKind::RightCurlyBracket
@@ -508,6 +520,8 @@ fn simple_key(
         | TokenKind::Comment
         | TokenKind::Equals
         | TokenKind::Comma
+        | TokenKind::DollarSign
+        | TokenKind::Colon
         | TokenKind::LeftSquareBracket
         | TokenKind::LeftCurlyBracket
         | TokenKind::RightCurlyBracket
@@ -575,6 +589,8 @@ fn opt_dot_keys(
             let kind = match current_token.kind() {
                 TokenKind::Equals
                 | TokenKind::Comma
+                | TokenKind::DollarSign
+                | TokenKind::Colon
                 | TokenKind::LeftSquareBracket
                 | TokenKind::RightSquareBracket
                 | TokenKind::LeftCurlyBracket
@@ -665,6 +681,7 @@ fn value(tokens: &mut Stream<'_>, receiver: &mut dyn EventReceiver, error: &mut 
     match current_token.kind() {
         TokenKind::Comment
         | TokenKind::Comma
+        | TokenKind::Colon
         | TokenKind::Newline
         | TokenKind::Eof
         | TokenKind::Whitespace => {
@@ -672,6 +689,9 @@ fn value(tokens: &mut Stream<'_>, receiver: &mut dyn EventReceiver, error: &mut 
             let encoding = None;
             receiver.scalar(fake_key, encoding, error);
             seek(tokens, -1);
+        }
+        TokenKind::DollarSign => {
+            on_env_var(tokens, current_token, receiver, error);
         }
         // Handled by the while loop above
         TokenKind::Equals => unreachable!(),
@@ -714,6 +734,116 @@ fn value(tokens: &mut Stream<'_>, receiver: &mut dyn EventReceiver, error: &mut 
     }
 }
 
+
+/// Parse an environment variable
+///
+/// ```abnf
+/// env_var = "$" "{" env_name [ ":" [ env_default ] ] "}"
+/// env_name = 1*atom
+/// env_default = 1*atom
+/// ```
+fn on_env_var(
+    tokens: &mut Stream<'_>,
+    dollar: &Token,
+    receiver: &mut dyn EventReceiver,
+    error: &mut dyn ErrorSink,
+) {
+    let mut span = dollar.span();
+
+    match tokens.next_token() {
+        Some(token) if token.kind() == TokenKind::LeftCurlyBracket => {
+            span = span.append(token.span());
+        }
+        Some(token) => {
+            error.report_error(
+                ParseError::new("expected `{`")
+                    .with_context(token.span())
+                    .with_expected(&[Expected::Literal("{")])
+                    .with_unexpected(token.span()),
+            );
+            seek(tokens, -1);
+            receiver.env_var(span, error);
+            return;
+        }
+        None => {
+            error.report_error(
+                ParseError::new("expected `{`")
+                    .with_context(span)
+                    .with_expected(&[Expected::Literal("{")])
+                    .with_unexpected(span.after()),
+            );
+            receiver.env_var(span, error);
+            return;
+        }
+    }
+
+    // Name
+    match tokens.next_token() {
+        Some(token) if token.kind() == TokenKind::Atom => {
+            span = span.append(token.span());
+        }
+        Some(token) => {
+            error.report_error(
+                ParseError::new("expected environment variable name")
+                    .with_context(token.span())
+                    .with_expected(&[Expected::Description("environment variable name")])
+                    .with_unexpected(token.span()),
+            );
+            seek(tokens, -1);
+        }
+        None => {
+            error.report_error(
+                ParseError::new("expected environment variable name")
+                    .with_context(span)
+                    .with_expected(&[Expected::Description("environment variable name")])
+                    .with_unexpected(span.after()),
+            );
+        }
+    }
+
+    // Optional colon and default
+    if let Some(token) = tokens.first() {
+        if token.kind() == TokenKind::Colon {
+            let colon = tokens.next_token().unwrap();
+            span = span.append(colon.span());
+
+            if let Some(token) = tokens.first() {
+                if token.kind() == TokenKind::Atom {
+                    let default = tokens.next_token().unwrap();
+                    span = span.append(default.span());
+                }
+            }
+        }
+    }
+
+    // Close
+    match tokens.next_token() {
+        Some(token) if token.kind() == TokenKind::RightCurlyBracket => {
+            span = span.append(token.span());
+        }
+        Some(token) => {
+            error.report_error(
+                ParseError::new("expected `}`")
+                    .with_context(token.span())
+                    .with_expected(&[Expected::Literal("}")])
+                    .with_unexpected(token.span()),
+            );
+            seek(tokens, -1);
+        }
+        None => {
+            error.report_error(
+                ParseError::new("unclosed environment variable")
+                    .with_context(span)
+                    .with_expected(&[Expected::Literal("}")])
+                    .with_unexpected(span.after()),
+            );
+        }
+    }
+
+    receiver.env_var(span, error);
+}
+
+
 /// Parse a scalar value
 ///
 /// ```abnf
@@ -729,6 +859,8 @@ fn on_scalar(
     let encoding = match scalar.kind() {
         TokenKind::Comment
         | TokenKind::Comma
+        | TokenKind::DollarSign
+        | TokenKind::Colon
         | TokenKind::Newline
         | TokenKind::Eof
         | TokenKind::Whitespace
@@ -771,7 +903,7 @@ fn on_scalar(
                         }
                         break;
                     }
-                    TokenKind::Dot | TokenKind::Atom => {
+                    TokenKind::Dot | TokenKind::Atom | TokenKind::DollarSign | TokenKind::Colon => {
                         span = span.append(next_token.span());
                         let _ = tokens.next_token();
                     }
@@ -840,6 +972,15 @@ fn on_array_open(
                     state = State::NeedsValue;
                 }
             },
+            TokenKind::Colon => {
+                error.report_error(
+                    ParseError::new("unexpected `:` in array")
+                        .with_context(array_open.span())
+                        .with_expected(&[Expected::Description("value"), Expected::Literal("]")])
+                        .with_unexpected(current_token.span()),
+                );
+                receiver.error(current_token.span(), error);
+            }
             TokenKind::Equals => {
                 error.report_error(
                     ParseError::new("unexpected `=` in array")
@@ -906,6 +1047,21 @@ fn on_array_open(
                 receiver.array_close(current_token.span(), error);
 
                 return;
+            }
+            TokenKind::DollarSign => {
+                if !matches!(state, State::NeedsValue) {
+                    error.report_error(
+                        ParseError::new("missing comma between array elements")
+                            .with_context(array_open.span())
+                            .with_expected(&[Expected::Literal(",")])
+                            .with_unexpected(current_token.span().before()),
+                    );
+                    receiver.value_sep(current_token.span().before(), error);
+                }
+
+                on_env_var(tokens, current_token, receiver, error);
+
+                state = State::NeedsComma;
             }
             TokenKind::LiteralString
             | TokenKind::BasicString
@@ -1021,7 +1177,7 @@ fn on_inline_table_open(
                     state = State::NeedsKey;
                 }
             },
-            TokenKind::Equals => match state {
+            TokenKind::Equals | TokenKind::Colon => match state {
                 State::NeedsKey => {
                     let fake_key = current_token.span().before();
                     let encoding = None;
@@ -1037,8 +1193,14 @@ fn on_inline_table_open(
                     state = State::NeedsValue;
                 }
                 State::NeedsValue | State::NeedsComma => {
+
+                    let msg = if current_token.kind() == TokenKind::Equals {
+                        "extra assignment between key-value pairs"
+                    } else {
+                        "extra `:` between key-value pairs"
+                    };
                     error.report_error(
-                        ParseError::new("extra assignment between key-value pairs")
+                        ParseError::new(msg)
                             .with_context(inline_table_open.span())
                             .with_expected(state.expected())
                             .with_unexpected(current_token.span().before()),
@@ -1152,6 +1314,38 @@ fn on_inline_table_open(
                     state = State::NeedsComma;
                 }
             },
+
+            TokenKind::DollarSign => {
+                match state {
+                    State::NeedsKey | State::NeedsComma => {
+                        let msg = if matches!(state, State::NeedsKey) {
+                            "missing key for inline table element"
+                        } else {
+                            "missing comma between key-value pairs"
+                        };
+                        error.report_error(
+                            ParseError::new(msg)
+                                .with_context(inline_table_open.span())
+                                .with_expected(state.expected())
+                                .with_unexpected(current_token.span().before()),
+                        );
+                        receiver.error(current_token.span().before(), error);
+                    }
+                    State::NeedsEquals => {
+                        error.report_error(
+                            ParseError::new("missing assignment between key-value pairs")
+                                .with_context(inline_table_open.span())
+                                .with_expected(state.expected())
+                                .with_unexpected(current_token.span().before()),
+                        );
+                    }
+                    State::NeedsValue => {}
+                }
+
+                on_env_var(tokens, current_token, receiver, error);
+
+                state = State::NeedsComma;
+            }
             TokenKind::LiteralString
             | TokenKind::BasicString
             | TokenKind::MlLiteralString
@@ -1307,6 +1501,8 @@ fn ws_comment_newline(
             TokenKind::Dot
             | TokenKind::Equals
             | TokenKind::Comma
+            | TokenKind::DollarSign
+            | TokenKind::Colon
             | TokenKind::LeftSquareBracket
             | TokenKind::RightSquareBracket
             | TokenKind::LeftCurlyBracket
@@ -1363,6 +1559,8 @@ fn on_comment(
         TokenKind::Dot
         | TokenKind::Equals
         | TokenKind::Comma
+        | TokenKind::DollarSign
+        | TokenKind::Colon
         | TokenKind::LeftSquareBracket
         | TokenKind::RightSquareBracket
         | TokenKind::LeftCurlyBracket
@@ -1401,6 +1599,8 @@ fn eof(tokens: &mut Stream<'_>, receiver: &mut dyn EventReceiver, error: &mut dy
         TokenKind::Dot
         | TokenKind::Equals
         | TokenKind::Comma
+        | TokenKind::DollarSign
+        | TokenKind::Colon
         | TokenKind::LeftSquareBracket
         | TokenKind::RightSquareBracket
         | TokenKind::LeftCurlyBracket
@@ -1444,6 +1644,8 @@ fn ignore_to_newline(
             TokenKind::Dot
             | TokenKind::Equals
             | TokenKind::Comma
+            | TokenKind::DollarSign
+            | TokenKind::Colon
             | TokenKind::LeftSquareBracket
             | TokenKind::RightSquareBracket
             | TokenKind::LeftCurlyBracket
@@ -1490,6 +1692,8 @@ fn ignore_to_value_close(
             TokenKind::Dot
             | TokenKind::Equals
             | TokenKind::Comma
+            | TokenKind::DollarSign
+            | TokenKind::Colon
             | TokenKind::LiteralString
             | TokenKind::BasicString
             | TokenKind::MlLiteralString

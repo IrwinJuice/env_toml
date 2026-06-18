@@ -47,6 +47,10 @@ pub enum TokenKind {
     LeftCurlyBracket = b'{',
     /// Inline table end
     RightCurlyBracket = b'}',
+    /// Environment Variable start
+    DollarSign = b'$',
+    /// Environment Variable and default value separator
+    Colon = b':',
     Whitespace = WSCHAR.0,
     Comment = COMMENT_START_SYMBOL,
     Newline = b'\n',
@@ -71,6 +75,8 @@ impl TokenKind {
             Self::RightSquareBracket => "`]`",
             Self::LeftCurlyBracket => "`{`",
             Self::RightCurlyBracket => "`}`",
+            Self::DollarSign => "`$`",
+            Self::Colon => "`:`",
             Self::Whitespace => "whitespace",
             Self::Comment => "comment",
             Self::Newline => "newline",
@@ -97,6 +103,8 @@ impl TokenKind {
             | Self::Comma
             | Self::RightCurlyBracket
             | Self::LeftCurlyBracket
+            | Self::DollarSign
+            | Self::Colon
             | Self::Whitespace
             | Self::Newline
             | Self::Comment

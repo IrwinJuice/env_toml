@@ -133,6 +133,10 @@ impl crate::parser::EventReceiver for DebugEventReceiver<'_> {
         self.receiver.newline(span, error);
         render_event(span, "<newline>", anstyle::AnsiColor::Cyan.on_default());
     }
+    fn env_var(&mut self, span: Span, error: &mut dyn ErrorSink) {
+        self.receiver.env_var(span, error);
+        render_event(span, "<env var>", anstyle::AnsiColor::Yellow.on_default());
+    }
     fn error(&mut self, span: Span, error: &mut dyn ErrorSink) {
         self.receiver.error(span, error);
         render_event(span, "<error>", anstyle::AnsiColor::Red.on_default());

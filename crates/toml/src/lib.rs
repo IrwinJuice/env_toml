@@ -1,4 +1,4 @@
-//! A [serde]-compatible [TOML]-parsing library
+//! A [serde]-compatible [TOML]-parsing library extended with Environment Variable syntax
 //!
 //! TOML itself is a simple, ergonomic, and readable configuration format:
 //!
@@ -13,13 +13,85 @@
 //! The TOML format tends to be relatively common throughout the Rust community
 //! for configuration, notably being used by [Cargo], Rust's package manager.
 //!
+//! ### Why this crate?
+//! While standard TOML is great, configuration files often need to dynamically adapt to
+//! different environments (e.g., development, staging, production). The official TOML
+//! specification and upstream implementation do not natively support environment variables.
+//!
+//! This crate bridges that gap by allowing you to inject environment variables directly into
+//! your TOML files using a clean syntax (e.g., `${MY_ENV_VAR}`), while remaining fully
+//! compatible with [serde].
+//!
+//! If you do not require environment variable support, we highly recommend using the original [toml][toml_crate] crate instead.
+//!
+//! ### Serialization vs. Deserialization
+//! It is important to note how environment variables interact with Serde's traits:
+//! * **Deserialization (Parsing):** Environment variable syntax (`${...}`) is resolved when reading a TOML string into your Rust structures.
+//! * **Serialization (Writing):** Serializing Rust structures back into TOML works exactly like the upstream crate. However, **the environment variable syntax is not injected during serialization**.
+//! For example, if a struct field contains the value `"production"`, it will be written as a plain string `"production"`, not as `${ENV_TYPE}`.
+//!
+//! ### Platform & Standard Library Support
+//! Please note that resolving environment variables requires access to the operating system's
+//! environment via the Rust standard library (`std`). Consequently, **this crate requires `std`**
+//! and cannot be used in strict `#![no_std]` environments where standard library access is unavailable.
+//!
+//! ### Environment variable parsing
+//! This crate extends TOML syntax with environment variable placeholders:
+//!
+//! ```toml
+//! db_url = ${DB_URL} # Required: Fails if not set
+//! db_port = ${DB_PORT:8080} # Optional: Defaults to 8080
+//! empty_default = ${ENV_VALUE:} # Optional: Defaults to `None` for optional fields, or an empty string for other types
+//! list = [ ${VAL1}, ${VAL2:c}, ${VAL3:d} ]
+//! ```
+//!
+//! ### Resolution rules
+//! - `${NAME}` reads the environment variable `NAME`
+//! - `${NAME:default}` uses `default` when `NAME` is not set
+//! - `${NAME:}` uses `None` for optional fields, or an __empty string__ for other types when `NAME` is not set
+//!
+//! ### Type behavior
+//! After resolution, env-var values are reinterpreted as TOML scalars when appropriate:
+//!
+//! - `"8080"` → integer if the destination type is numeric
+//! - `"3.14"` → float
+//! - `"true"` → boolean
+//! - `"hello"` → string
+//!
+//! Structured TOML values are not treated as structured env-var payloads.
+//! If an env-var contains something that looks like an array or table, the parser falls back to the raw string instead of deserializing it as TOML structure.
+//!
+#![cfg_attr(not(feature = "default"), doc = " ```ignore")]
+#![cfg_attr(feature = "default", doc = " ```")]
+//!  use serde::Deserialize;
+//!  unsafe {
+//!      std::env::set_var("VAR_ARRAY", "[1, 2]");
+//!      std::env::set_var("VAR_TABLE", "{ a = 1 }");
+//!  }
+//!
+//!  #[derive(Deserialize)]
+//!  struct Config {
+//!      arr_s: String,
+//!      tbl_s: String,
+//!  }
+//!
+//!  let config: Config = env_toml::from_str(r#"
+//!  arr_s = ${VAR_ARRAY}
+//!  tbl_s = ${VAR_TABLE}
+//!  "#).unwrap();
+//!
+//!  assert_eq!(config.arr_s, "[1, 2]");
+//!  assert_eq!(config.tbl_s, "{ a = 1 }");
+//! ```
+//! If you deserialize the same env-var into a structured type like `Vec<i64>`, it will fail.
+//!
 //! ## TOML values
 //!
 //! A TOML document is represented with the [`Table`] type which maps `String` to the [`Value`] enum:
 //!
 #![cfg_attr(not(feature = "default"), doc = " ```ignore")]
 #![cfg_attr(feature = "default", doc = " ```")]
-//! # use toml::value::{Datetime, Array, Table};
+//! # use env_toml::value::{Datetime, Array, Table};
 //! pub enum Value {
 //!     String(String),
 //!     Integer(i64),
@@ -37,7 +109,7 @@
 //!
 #![cfg_attr(not(feature = "default"), doc = " ```ignore")]
 #![cfg_attr(feature = "default", doc = " ```")]
-//! use toml::Table;
+//! use env_toml::Table;
 //!
 //! let value = "foo = 'bar'".parse::<Table>().unwrap();
 //!
@@ -76,33 +148,36 @@
 #![cfg_attr(feature = "default", doc = " ```")]
 //! use serde::Deserialize;
 //!
-//! #[derive(Deserialize)]
-//! struct Config {
-//!     ip: String,
-//!     port: Option<u16>,
-//!     keys: Keys,
-//! }
+//!  unsafe {
+//!      std::env::set_var("DB_URL", "postgres://localhost:5432");
+//!      std::env::set_var("DB_PORT", "9090");
+//!      std::env::set_var("EMPTY_VAL", "");
+//!  }
+//!   let toml_str = r#"
+//!   db_url = ${DB_URL}
+//!   db_port = ${DB_PORT:8080}
+//!   default_port = ${MISSING_PORT:8080}
+//!   empty_default_string = ${EMPTY_VAL:}
+//!   empty_option_default = ${EMPTY_VAL:}
+//!   "#;
 //!
-//! #[derive(Deserialize)]
-//! struct Keys {
-//!     github: String,
-//!     travis: Option<String>,
-//! }
+//!   #[derive(Deserialize)]
+//!   struct Config {
+//!       db_url: String,
+//!       db_port: u16,
+//!       default_port: u16,
+//!       empty_default_string: String,
+//!       empty_option_default: Option<u16>,
+//!   }
 //!
-//! let config: Config = toml::from_str(r#"
-//!     ip = '127.0.0.1'
+//!   let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
 //!
-//!     [keys]
-//!     github = 'xxxxxxxxxxxxxxxxx'
-//!     travis = 'yyyyyyyyyyyyyyyyy'
-//! "#).unwrap();
-//!
-//! assert_eq!(config.ip, "127.0.0.1");
-//! assert_eq!(config.port, None);
-//! assert_eq!(config.keys.github, "xxxxxxxxxxxxxxxxx");
-//! assert_eq!(config.keys.travis.as_ref().unwrap(), "yyyyyyyyyyyyyyyyy");
+//!   assert_eq!(config.db_url, "postgres://localhost:5432");
+//!   assert_eq!(config.db_port, 9090);
+//!   assert_eq!(config.default_port, 8080);
+//!   assert_eq!(config.empty_default_string, "");
+//!   assert_eq!(config.empty_option_default, None);
 //! ```
-//!
 //! You can serialize types in a similar fashion:
 //!
 #![cfg_attr(not(feature = "default"), doc = " ```ignore")]
@@ -131,13 +206,14 @@
 //!     },
 //! };
 //!
-//! let toml = toml::to_string(&config).unwrap();
+//! let toml = env_toml::to_string(&config).unwrap();
 //! ```
 //!
 //! [TOML]: https://github.com/toml-lang/toml
 //! [Cargo]: https://crates.io/
 //! [`serde`]: https://serde.rs/
 //! [serde]: https://serde.rs/
+//! [toml_crate]: https://crates.io/crates/toml
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(all(not(feature = "std"), not(test)), no_std)]

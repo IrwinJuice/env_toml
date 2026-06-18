@@ -115,6 +115,22 @@ impl core::fmt::Display for DeFloat<'_> {
     }
 }
 
+/// Represents an environment variable
+#[derive(Clone, Debug)]
+pub struct DeEnvVar<'i> {
+    pub(crate) name: Cow<'i, str>,
+    pub(crate) default: Option<Cow<'i, str>>,
+}
+
+impl Default for DeEnvVar<'_> {
+    fn default() -> Self {
+        Self {
+            name: Cow::Borrowed(""),
+            default: None,
+        }
+    }
+}
+
 /// Representation of a TOML value.
 #[derive(Clone, Debug)]
 pub enum DeValue<'i> {
@@ -132,12 +148,14 @@ pub enum DeValue<'i> {
     Array(DeArray<'i>),
     /// Represents a TOML table
     Table(DeTable<'i>),
+    /// Represents an environment variable
+    EnvVar(DeEnvVar<'i>),
 }
 
 impl<'i> DeValue<'i> {
     /// Parse a TOML value
     pub fn parse(input: &'i str) -> Result<Spanned<Self>, crate::de::Error> {
-        let source = toml_parser::Source::new(input);
+        let source = env_toml_parser::Source::new(input);
         let mut errors = crate::de::error::TomlSink::<Option<_>>::new(source);
         let value = crate::de::parser::parse_value(source, &mut errors);
         if let Some(err) = errors.into_inner() {
@@ -149,7 +167,7 @@ impl<'i> DeValue<'i> {
 
     /// Parse a TOML value, with best effort recovery on error
     pub fn parse_recoverable(input: &'i str) -> (Spanned<Self>, Vec<crate::de::Error>) {
-        let source = toml_parser::Source::new(input);
+        let source = env_toml_parser::Source::new(input);
         let mut errors = crate::de::error::TomlSink::<Vec<_>>::new(source);
         let value = crate::de::parser::parse_value(source, &mut errors);
         (value, errors.into_inner())
@@ -172,6 +190,14 @@ impl<'i> DeValue<'i> {
                 }
             }
             DeValue::Table(v) => v.make_owned(),
+            DeValue::EnvVar(v) => {
+                let owned_name = core::mem::take(&mut v.name).into_owned();
+                v.name = Cow::Owned(owned_name);
+                if let Some(default) = v.default.as_mut() {
+                    let owned_default = core::mem::take(default).into_owned();
+                    *default = Cow::Owned(owned_default);
+                }
+            }
         }
     }
 
@@ -314,6 +340,7 @@ impl<'i> DeValue<'i> {
             DeValue::Datetime(..) => "datetime",
             DeValue::Array(..) => "array",
             DeValue::Table(..) => "table",
+            DeValue::EnvVar(..) => "env var",
         }
     }
 }

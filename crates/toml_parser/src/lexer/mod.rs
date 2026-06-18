@@ -88,6 +88,8 @@ fn process_token(peek_byte: u8, stream: &mut Stream<'_>) -> Token {
         b']' => lex_ascii_char(stream, TokenKind::RightSquareBracket),
         b'{' => lex_ascii_char(stream, TokenKind::LeftCurlyBracket),
         b'}' => lex_ascii_char(stream, TokenKind::RightCurlyBracket),
+        b'$' => lex_ascii_char(stream, TokenKind::DollarSign),
+        b':' => lex_ascii_char(stream, TokenKind::Colon),
         b' ' => lex_whitespace(stream),
         b'\t' => lex_whitespace(stream),
         b'#' => lex_comment(stream),
@@ -620,7 +622,7 @@ fn lex_atom(stream: &mut Stream<'_>) -> Token {
     let start = stream.current_token_start();
 
     // Intentionally leaves off quotes in case the opening quote was missing
-    const TOKEN_START: &[u8] = b".=,[]{} \t#\r\n";
+    const TOKEN_START: &[u8] = b".=,[]{} \t#\r\n$:";
     let offset = stream
         .as_bstr()
         .offset_for(|b| TOKEN_START.contains_token(b))

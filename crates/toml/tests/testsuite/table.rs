@@ -2,8 +2,8 @@ use snapbox::assert_data_eq;
 use snapbox::prelude::*;
 use snapbox::str;
 
-use toml::Value::{Array, Integer, String, Table};
-use toml::map::Map;
+use env_toml::Value::{Array, Integer, String, Table};
+use env_toml::map::Map;
 
 #[test]
 fn display() {
@@ -59,7 +59,7 @@ test = "wut"
 #[test]
 fn datetime_offset_issue_496() {
     let original = "value = 1911-01-01T10:11:12-00:36\n";
-    let toml = original.parse::<toml::Table>().unwrap();
+    let toml = original.parse::<env_toml::Table>().unwrap();
     let output = toml.to_string();
     assert_data_eq!(output, original.raw());
 }

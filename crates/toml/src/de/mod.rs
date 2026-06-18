@@ -18,6 +18,8 @@ pub use deserializer::Deserializer;
 #[cfg(feature = "serde")]
 pub use deserializer::ValueDeserializer;
 #[cfg(feature = "parse")]
+pub use parser::DeEnvVar;
+#[cfg(feature = "parse")]
 pub use parser::DeArray;
 #[cfg(feature = "parse")]
 pub use parser::DeFloat;
@@ -57,7 +59,7 @@ use crate::alloc_prelude::*;
 ///     name: String,
 /// }
 ///
-/// let config: Config = toml::from_str(r#"
+/// let config: Config = env_toml::from_str(r#"
 ///     title = 'TOML Example'
 ///
 ///     [owner]

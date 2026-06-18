@@ -21,31 +21,31 @@ mod ser_to_string;
 mod ser_to_string_pretty;
 mod spanned;
 
-use toml::Spanned;
-use toml::from_str;
-use toml::to_string;
-use toml::to_string_pretty;
-use toml::value::Date;
-use toml::value::Datetime;
-use toml::value::Time;
+use env_toml::Spanned;
+use env_toml::from_str;
+use env_toml::to_string;
+use env_toml::to_string_pretty;
+use env_toml::value::Date;
+use env_toml::value::Datetime;
+use env_toml::value::Time;
 
-use toml::Table as SerdeDocument;
-use toml::Table as SerdeTable;
-use toml::Value as SerdeValue;
+use env_toml::Table as SerdeDocument;
+use env_toml::Table as SerdeTable;
+use env_toml::Value as SerdeValue;
 
-fn value_from_str<T>(s: &'_ str) -> Result<T, toml::de::Error>
+fn value_from_str<T>(s: &'_ str) -> Result<T, env_toml::de::Error>
 where
     T: serde::de::DeserializeOwned,
 {
-    T::deserialize(toml::de::ValueDeserializer::parse(s)?)
+    T::deserialize(env_toml::de::ValueDeserializer::parse(s)?)
 }
 
-fn to_string_value<T>(value: &T) -> Result<String, toml::ser::Error>
+fn to_string_value<T>(value: &T) -> Result<String, env_toml::ser::Error>
 where
     T: serde::ser::Serialize + ?Sized,
 {
     let mut output = String::new();
-    let serializer = toml::ser::ValueSerializer::new(&mut output);
+    let serializer = env_toml::ser::ValueSerializer::new(&mut output);
     value.serialize(serializer)?;
     Ok(output)
 }
