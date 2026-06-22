@@ -67,6 +67,14 @@ fn main() {
 ```
 If you deserialize the same env-var into a structured type like `Vec<i64>`, it will fail.
 
+## Plugins
+
+By default, standard TOML plugins flag environment variable placeholder syntax as a syntax error because it falls outside the TOML specification.
+
+The plugins listed below automatically suppress those specific false-positive inspection warnings, allowing you to work with environment-variable-interpolated TOML files without noisy red squiggles.
+
+- https://github.com/IrwinJuice/env_toml_jetbrains_plugin
+
 [serde]: https://serde.rs/
 [toml]: https://github.com/toml-lang/toml
 [toml_crate]: https://crates.io/crates/toml
