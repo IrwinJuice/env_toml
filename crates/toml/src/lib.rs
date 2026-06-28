@@ -36,19 +36,37 @@
 //! and cannot be used in strict `#![no_std]` environments where standard library access is unavailable.
 //!
 //! ### Environment variable parsing
-//! This crate extends TOML syntax with environment variable placeholders:
+//! This crate extends TOML syntax with environment variable placeholders.
+//! Placeholders can be written either as bare values or inside quoted strings:
 //!
+//! #### Quoted string syntax — valid TOML, friendlier to standard tooling
 //! ```toml
-//! db_url = ${DB_URL} # Required: Fails if not set
-//! db_port = ${DB_PORT:8080} # Optional: Defaults to 8080
-//! empty_default = ${ENV_VALUE:} # Optional: Defaults to `None` for optional fields, or an empty string for other types
+//! db_url = "${DB_URL}"           # Required: Fails if not set
+//! db_port = "${DB_PORT:8080}"    # Optional: Defaults to 8080
+//! empty_default = "${ENV_VALUE:}" # Optional: Defaults to `None` for optional fields, or an empty string for other types
+//! list = [ "${VAL1}", "${VAL2:c}", "${VAL3:d}" ]
+//! ```
+//!
+//! #### Bare syntax
+//! ```toml
+//! db_url = ${DB_URL}              # Required: Fails if not set
+//! db_port = ${DB_PORT:8080}       # Optional: Defaults to 8080
+//! empty_default = ${ENV_VALUE:}   # Optional: Defaults to `None` for optional fields, or an empty string for other types
 //! list = [ ${VAL1}, ${VAL2:c}, ${VAL3:d} ]
 //! ```
+//!
+//! Both forms resolve identically at deserialization time.
 //!
 //! ### Resolution rules
 //! - `${NAME}` reads the environment variable `NAME`
 //! - `${NAME:default}` uses `default` when `NAME` is not set
 //! - `${NAME:}` uses `None` for optional fields, or an __empty string__ for other types when `NAME` is not set
+//!
+//! ### Quoted string syntax
+//! Wrapping a placeholder in double quotes (`"${VAR}"`) is standard TOML and is accepted by
+//! any spec-compliant TOML parser. The resolution behaviour is identical to the bare form.
+//! Only a string that consists **entirely** of a single placeholder is resolved as an env var —
+//! a string like `"prefix-${VAR}"` is treated as a plain literal string and is **not** interpolated.
 //!
 //! ### Type behavior
 //! After resolution, env-var values are reinterpreted as TOML scalars when appropriate:
