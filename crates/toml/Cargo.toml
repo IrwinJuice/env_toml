@@ -95,7 +95,11 @@ name = "toml2json"
 required-features = ["parse", "display", "serde"]
 
 [[example]]
-name = "env_var"
+name = "env_var_bare"
+required-features = ["parse", "display", "serde"]
+
+[[example]]
+name = "env_var_string"
 required-features = ["parse", "display", "serde"]
 
 [lints]

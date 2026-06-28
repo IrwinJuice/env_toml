@@ -16,6 +16,18 @@ If you do not require environment variable support, we highly recommend using th
 
 ## Environment variable parsing
 This crate extends TOML syntax with environment variable placeholders:
+
+#### Quoted string syntax — valid TOML, friendlier to standard tooling
+```toml
+# Quoted string syntax — valid TOML, friendlier to standard tooling
+db_url = "${DB_URL}"          # Required: Fails if not set
+db_port = "${DB_PORT:8080}"   # Optional: Defaults to 8080
+default_port = "${MISSING_PORT:8080}"  # Optional: Defaults to 8080
+empty_default = "${ENV_VALUE:}" # Optional: Defaults to `None` for optional fields, or an empty string for other types
+list = [ "${VAL1}", "${VAL2:c}", "${VAL3:d}" ]
+```
+
+#### Bare syntax
 ```toml
 db_url = ${DB_URL} # Required: Fails if not set
 db_port = ${DB_PORT:8080} # Optional: Defaults to 8080
@@ -24,10 +36,17 @@ empty_default = ${ENV_VALUE:} # Optional: Defaults to `None` for optional fields
 list = [ ${VAL1}, ${VAL2:c}, ${VAL3:d} ]
 ```
 
+Both forms resolve identically at deserialization time.
+
 ### Resolution rules
 - `${NAME}` reads the environment variable `NAME`
 - `${NAME:default}` uses `default` when `NAME` is not set
 - `${NAME:}` uses `None` for optional fields, or an __empty string__ for other types when `NAME` is not set
+
+### Quoted string syntax
+Wrapping a placeholder in double quotes `"${VAR}"` is standard TOML and is accepted by any spec-compliant TOML parser.
+The resolution behavior is identical to the bare form.
+*Only a basic string that consists entirely of a single placeholder is resolved as an environment variable* — a string like "prefix-${VAR}" is treated as a plain literal string and is not interpolated.
 
 ### Type behavior
 After resolution, env-var values are reinterpreted as TOML scalars when appropriate:
@@ -67,9 +86,11 @@ fn main() {
 ```
 If you deserialize the same env-var into a structured type like `Vec<i64>`, it will fail.
 
-## Plugins
+### Plugins for bare environment variable placeholder syntax
 
-By default, standard TOML plugins flag environment variable placeholder syntax as a syntax error because it falls outside the TOML specification.
+> Using the quoted string format ("${VAR}") avoids warnings.
+
+By default, standard TOML plugins flag bare environment variable placeholder syntax as a syntax error because it falls outside the TOML specification.
 
 The plugins listed below automatically suppress those specific false-positive inspection warnings, allowing you to work with environment-variable-interpolated TOML files without noisy red squiggles.
 
