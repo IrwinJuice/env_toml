@@ -1,6 +1,6 @@
 [package]
 name = "env_toml"
-version = "0.1.0+upstream-1.1.2"
+version = "0.2.0+upstream-1.1.2"
 description = """
 A native Rust encoder and decoder of TOML-formatted files and streams with Environment Variables. Provides
 implementations of the standard Serialize/Deserialize traits for TOML data to
@@ -67,7 +67,7 @@ toml-test-harness = { version = "1.10.0", features = ["snapshot"] }
 toml-test-data = "2.10.0"
 snapbox = "1.1.0"
 walkdir = "2.5.0"
-itertools = "0.14.0"
+itertools = "0.15.0"
 serde-untagged = "0.1.9"
 
 [[test]]
