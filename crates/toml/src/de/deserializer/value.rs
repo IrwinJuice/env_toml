@@ -94,6 +94,24 @@ where
     }
 }
 
+
+/// Helper function that checks if a single string is an interpolation pattern
+fn try_parse_interpolation(input: &str) -> Option<DeEnvVar<'_>> {
+    if input.starts_with("${") && input.ends_with('}') && input.matches("${").count() == 1 {
+        let content = &input[2..input.len() - 1];
+        let (name, default) = match content.split_once(':') {
+            Some((n, d)) => (n, Some(alloc::borrow::Cow::Borrowed(d))),
+            None => (content, None),
+        };
+        Some(DeEnvVar {
+            name: alloc::borrow::Cow::Borrowed(name),
+            default,
+        })
+    } else {
+        None
+    }
+}
+
 /// Deserializer for a resolved environment variable value.
 struct EnvVarValueDeserializer {
     value: String,
@@ -217,8 +235,20 @@ impl<'de> serde_core::Deserializer<'de> for ValueDeserializer<'de> {
     {
         let span = self.span;
         match self.input {
-            DeValue::String(DeString::Owned(v)) => visitor.visit_string(v),
-            DeValue::String(DeString::Borrowed(v)) => visitor.visit_borrowed_str(v),
+            DeValue::String(s) => {
+                if let Some(v) = try_parse_interpolation(s.as_ref()) {
+                    let resolved = resolve_env_var(v, &span)?;
+                    match resolved {
+                        Some(value) => visit_env_var_value(value, visitor),
+                        None => visitor.visit_string("".to_string()),
+                    }
+                } else {
+                    match s {
+                        DeString::Owned(v) => visitor.visit_string(v),
+                        DeString::Borrowed(v) => visitor.visit_borrowed_str(v),
+                    }
+                }
+            }
             DeValue::Integer(v) => {
                 if let Some(v) = v.to_i64() {
                     visitor.visit_i64(v)
@@ -286,6 +316,17 @@ impl<'de> serde_core::Deserializer<'de> for ValueDeserializer<'de> {
                 match value {
                     Some(value) => visitor.visit_some(EnvVarValueDeserializer { value }),
                     None => visitor.visit_none(),
+                }
+            }
+            DeValue::String(ref s) => {
+                if let Some(v) = try_parse_interpolation(s.as_ref()) {
+                    let value = resolve_env_var(v, &span)?;
+                    match value {
+                        Some(value) => visitor.visit_some(EnvVarValueDeserializer { value }),
+                        None => visitor.visit_none(),
+                    }
+                } else {
+                    visitor.visit_some(self)
                 }
             }
             _ => visitor.visit_some(self),
@@ -408,8 +449,18 @@ impl<'de> serde_core::Deserializer<'de> for ValueDeserializer<'de> {
                 let value = value.unwrap_or_default();
                 visitor.visit_string(value)
             }
+            DeValue::String(s) => {
+                if let Some(v) = try_parse_interpolation(s.as_ref()) {
+                    let value = resolve_env_var(v, &span)?;
+                    let value = value.unwrap_or_default();
+                    visitor.visit_string(value)
+                } else {
+                    Self::with_parts(DeValue::String(s), span.clone()).deserialize_any(visitor)
+                }
+            }
             _ => self.deserialize_any(visitor),
         }
+
         .map_err(|mut e: Self::Error| {
             if e.span().is_none() {
                 e.set_span(Some(span));
