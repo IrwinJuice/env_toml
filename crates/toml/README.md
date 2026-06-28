@@ -2,7 +2,7 @@
 
 [![Documentation](https://img.shields.io/badge/docs-main-blue.svg)](https://docs.rs/env_toml)
 ![License](https://img.shields.io/crates/l/toml.svg)
-[![Crates Status](https://img.shields.io/crates/v/toml.svg)](https://crates.io/crates/env_toml)
+[![Crates Status](https://img.shields.io/crates/v/env_toml.svg)](https://crates.io/crates/env_toml)
 
 A [serde]-compatible [TOML][toml] decoder and encoder for Rust extended with Environment Variable syntax.
 
