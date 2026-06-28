@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Docs
+
+- Fix crate badge link in README.md 
+
 ## [0.2.0] - 2026-06-28
+
+### Features
+
+- Add support for string-based environment variable interpolation
 
 ### Docs
 
