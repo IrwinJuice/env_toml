@@ -1,4 +1,9 @@
-#![cfg(all(feature = "std", feature = "parse", feature = "display", feature = "serde"))]
+#![cfg(all(
+    feature = "std",
+    feature = "parse",
+    feature = "display",
+    feature = "serde"
+))]
 #![allow(dead_code)]
 
 use serde::Deserialize;
