@@ -21,7 +21,7 @@ db_url = ${DB_URL}
 db_port = ${DB_PORT:8080}
 default_port = ${MISSING_PORT:8080}
 empty_string_default = ${EMPTY_VAL:}
-empty_option_default = ${EMPTY_VAL:}(feature = "par
+empty_option_default = ${EMPTY_VAL:}
 "#;
 
     #[derive(Deserialize, Debug, PartialEq)]
