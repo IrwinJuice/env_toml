@@ -1,3 +1,6 @@
+#![cfg(all(feature = "parse", feature = "display", feature = "serde"))]
+#![allow(dead_code)]
+
 use serde::Deserialize;
 
 #[test]
@@ -165,7 +168,6 @@ tbl_s = ${VAR_TABLE}
     // Attempting to deserialize the arr_s env-var as an actual sequence should fail,
     // because env-vars that parse as arrays are intentionally treated as strings.
     #[derive(Deserialize, Debug)]
-    #[allow(dead_code)]
     struct SeqConfig {
         arr_s: Vec<i64>,
     }
@@ -455,7 +457,6 @@ tbl_s = "${VAR_TABLE}"
     // Attempting to deserialize the arr_s env-var as an actual sequence should fail,
     // because env-vars that parse as arrays are intentionally treated as strings.
     #[derive(Deserialize, Debug)]
-    #[allow(dead_code)]
     struct SeqConfig {
         arr_s: Vec<i64>,
     }
