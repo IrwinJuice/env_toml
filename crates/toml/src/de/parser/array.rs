@@ -1,8 +1,8 @@
 use serde_spanned::Spanned;
 
 use crate::de::parser::inline_table::on_inline_table;
-use crate::de::parser::value::on_scalar;
 use crate::de::parser::value::on_env_var;
+use crate::de::parser::value::on_scalar;
 use crate::de::{DeArray, DeValue};
 
 use crate::de::parser::prelude::*;
@@ -100,7 +100,11 @@ impl<'i> State<'i> {
 
     fn whitespace(&mut self, _event: &env_toml_parser::parser::Event) {}
 
-    fn capture_value(&mut self, _event: &env_toml_parser::parser::Event, value: Spanned<DeValue<'i>>) {
+    fn capture_value(
+        &mut self,
+        _event: &env_toml_parser::parser::Event,
+        value: Spanned<DeValue<'i>>,
+    ) {
         self.trailing_start = None;
         self.current_value = Some(value);
     }
