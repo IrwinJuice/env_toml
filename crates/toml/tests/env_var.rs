@@ -1,4 +1,4 @@
-#![cfg(all(feature = "parse", feature = "display", feature = "serde"))]
+#![cfg(all(feature = "std", feature = "parse", feature = "display", feature = "serde"))]
 #![allow(dead_code)]
 
 use serde::Deserialize;
@@ -16,7 +16,7 @@ db_url = ${DB_URL}
 db_port = ${DB_PORT:8080}
 default_port = ${MISSING_PORT:8080}
 empty_string_default = ${EMPTY_VAL:}
-empty_option_default = ${EMPTY_VAL:}
+empty_option_default = ${EMPTY_VAL:}(feature = "par
 "#;
 
     #[derive(Deserialize, Debug, PartialEq)]
