@@ -54,4 +54,3 @@ fn main() {
     assert_eq!(config.arr_s, "[1, 2]");
     assert_eq!(config.tbl_s, "{ a = 1 }");
 }
-

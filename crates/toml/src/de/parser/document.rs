@@ -299,7 +299,8 @@ impl<'i> State<'i> {
                     );
                     let key_span = get_key_span(key);
                     let old_span = entry.span();
-                    let old_span = env_toml_parser::Span::new_unchecked(old_span.start, old_span.end);
+                    let old_span =
+                        env_toml_parser::Span::new_unchecked(old_span.start, old_span.end);
                     errors.report_error(
                         ParseError::new("duplicate key")
                             .with_unexpected(key_span)
@@ -432,8 +433,10 @@ fn descend_path<'t, 'i>(
                         match last_child.as_mut() {
                             DeValue::Table(table) => table,
                             existing => {
-                                let old_span =
-                                    env_toml_parser::Span::new_unchecked(old_span.start, old_span.end);
+                                let old_span = env_toml_parser::Span::new_unchecked(
+                                    old_span.start,
+                                    old_span.end,
+                                );
                                 let key_span = get_key_span(key);
                                 errors.report_error(
                                     ParseError::new(format!(

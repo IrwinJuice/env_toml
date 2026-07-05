@@ -123,7 +123,11 @@ impl<'i> State<'i> {
         self.seen_keyval_sep = true;
     }
 
-    fn capture_value(&mut self, _event: &env_toml_parser::parser::Event, value: Spanned<DeValue<'i>>) {
+    fn capture_value(
+        &mut self,
+        _event: &env_toml_parser::parser::Event,
+        value: Spanned<DeValue<'i>>,
+    ) {
         #[cfg(feature = "debug")]
         let _scope = TraceScope::new("inline_table::capture_value");
         self.current_value = Some(value);

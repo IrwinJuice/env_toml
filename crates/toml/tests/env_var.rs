@@ -36,7 +36,9 @@ empty_option_default = ${EMPTY_VAL:}
 
 #[test]
 fn test_env_var_missing() {
-    unsafe { std::env::remove_var("MISSING_VAL"); }
+    unsafe {
+        std::env::remove_var("MISSING_VAL");
+    }
     let toml_str = "db_url = ${MISSING_VAL}";
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -46,7 +48,12 @@ fn test_env_var_missing() {
 
     let result: Result<Config, env_toml::de::Error> = env_toml::from_str(toml_str);
     assert!(result.is_err());
-    assert!(result.unwrap_err().to_string().contains("environment variable `MISSING_VAL` not set"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("environment variable `MISSING_VAL` not set")
+    );
 }
 
 #[test]
@@ -71,7 +78,9 @@ list = [ ${VAL1}, ${VAL2:c}, ${VAL3:d} ]
 
 #[test]
 fn test_env_var_in_table() {
-    unsafe { std::env::set_var("KEY1", "value1"); }
+    unsafe {
+        std::env::set_var("KEY1", "value1");
+    }
 
     let toml_str = r#"
 [table]
@@ -96,7 +105,7 @@ key = ${KEY1}
 fn test_env_var_numeric_types() {
     unsafe {
         std::env::set_var("PORT", "8080");
-        std::env::set_var("TIMEOUT", "3.14");
+        std::env::set_var("TIMEOUT", "3.01");
         std::env::set_var("DEBUG", "true");
         std::env::set_var("COUNT", "42");
     }
@@ -122,12 +131,11 @@ port_s  = ${PORT}
     let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
 
     assert_eq!(config.port, 8080);
-    assert!((config.timeout - 3.14).abs() < f64::EPSILON);
+    assert!((config.timeout - 3.01).abs() < f64::EPSILON);
     assert!(config.debug);
     assert_eq!(config.count, 42);
     assert_eq!(config.port_s, "8080");
 }
-
 
 #[test]
 fn test_visit_env_var_value_fallbacks() {
@@ -157,6 +165,7 @@ tbl_s = ${VAR_TABLE}
     // Attempting to deserialize the arr_s env-var as an actual sequence should fail,
     // because env-vars that parse as arrays are intentionally treated as strings.
     #[derive(Deserialize, Debug)]
+    #[allow(dead_code)]
     struct SeqConfig {
         arr_s: Vec<i64>,
     }
@@ -165,10 +174,11 @@ tbl_s = ${VAR_TABLE}
     assert!(res.is_err());
 }
 
-
 #[test]
 fn test_env_var_optional_empty_default() {
-    unsafe { std::env::remove_var("OPTIONAL_VAL"); }
+    unsafe {
+        std::env::remove_var("OPTIONAL_VAL");
+    }
     let toml_str = "opt = ${OPTIONAL_VAL:}";
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -182,7 +192,9 @@ fn test_env_var_optional_empty_default() {
 
 #[test]
 fn test_env_var_optional_u16_empty_default() {
-    unsafe { std::env::remove_var("OPTIONAL_PORT"); }
+    unsafe {
+        std::env::remove_var("OPTIONAL_PORT");
+    }
     let toml_str = "port = ${OPTIONAL_PORT:}";
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -196,7 +208,9 @@ fn test_env_var_optional_u16_empty_default() {
 
 #[test]
 fn test_env_var_optional_no_default() {
-    unsafe { std::env::remove_var("OPTIONAL_VAL_2"); }
+    unsafe {
+        std::env::remove_var("OPTIONAL_VAL_2");
+    }
     let toml_str = "opt = ${OPTIONAL_VAL_2}";
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -211,7 +225,9 @@ fn test_env_var_optional_no_default() {
 
 #[test]
 fn test_env_var_optional_with_default() {
-    unsafe { std::env::remove_var("OPTIONAL_VAL_3"); }
+    unsafe {
+        std::env::remove_var("OPTIONAL_VAL_3");
+    }
     let toml_str = "opt = ${OPTIONAL_VAL_3:default}";
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -220,12 +236,14 @@ fn test_env_var_optional_with_default() {
     }
 
     let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
-    assert_eq!(config.opt, Some("default".to_string()));
+    assert_eq!(config.opt, Some("default".to_owned()));
 }
 
 #[test]
 fn test_env_var_non_optional_empty_default() {
-    unsafe { std::env::remove_var("NON_OPTIONAL_VAL"); }
+    unsafe {
+        std::env::remove_var("NON_OPTIONAL_VAL");
+    }
     let toml_str = "val = ${NON_OPTIONAL_VAL:}";
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -240,7 +258,9 @@ fn test_env_var_non_optional_empty_default() {
 
 #[test]
 fn test_env_var_optional_u16_present() {
-    unsafe { std::env::set_var("PRESENT_PORT", "9090"); }
+    unsafe {
+        std::env::set_var("PRESENT_PORT", "9090");
+    }
     let toml_str = "port = ${PRESENT_PORT:8080}";
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -254,7 +274,9 @@ fn test_env_var_optional_u16_present() {
 
 #[test]
 fn test_env_var_set_to_empty_string() {
-    unsafe { std::env::set_var("SET_EMPTY_VAL", ""); }
+    unsafe {
+        std::env::set_var("SET_EMPTY_VAL", "");
+    }
     let toml_str = "opt = ${SET_EMPTY_VAL:}";
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -304,7 +326,9 @@ empty_option_default = "${EMPTY_VAL:}"
 
 #[test]
 fn test_env_var_missing_in_string() {
-    unsafe { std::env::remove_var("MISSING_VAL"); }
+    unsafe {
+        std::env::remove_var("MISSING_VAL");
+    }
     let toml_str = r#"db_url = "${MISSING_VAL}""#;
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -314,7 +338,12 @@ fn test_env_var_missing_in_string() {
 
     let result: Result<Config, env_toml::de::Error> = env_toml::from_str(toml_str);
     assert!(result.is_err());
-    assert!(result.unwrap_err().to_string().contains("environment variable `MISSING_VAL` not set"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("environment variable `MISSING_VAL` not set")
+    );
 }
 
 #[test]
@@ -339,7 +368,9 @@ list = [ "${VAL1}", "${VAL2:c}", "${VAL3:d}" ]
 
 #[test]
 fn test_env_var_in_string_in_table() {
-    unsafe { std::env::set_var("KEY1", "value1"); }
+    unsafe {
+        std::env::set_var("KEY1", "value1");
+    }
 
     let toml_str = r#"
 [table]
@@ -364,7 +395,7 @@ key = "${KEY1}"
 fn test_env_var_in_string_numeric_types() {
     unsafe {
         std::env::set_var("PORT", "8080");
-        std::env::set_var("TIMEOUT", "3.14");
+        std::env::set_var("TIMEOUT", "3.01");
         std::env::set_var("DEBUG", "true");
         std::env::set_var("COUNT", "42");
     }
@@ -390,12 +421,11 @@ port_s  = "${PORT}"
     let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
 
     assert_eq!(config.port, 8080);
-    assert!((config.timeout - 3.14).abs() < f64::EPSILON);
+    assert!((config.timeout - 3.01).abs() < f64::EPSILON);
     assert!(config.debug);
     assert_eq!(config.count, 42);
     assert_eq!(config.port_s, "8080");
 }
-
 
 #[test]
 fn test_visit_env_var_in_string_value_fallbacks() {
@@ -425,18 +455,21 @@ tbl_s = "${VAR_TABLE}"
     // Attempting to deserialize the arr_s env-var as an actual sequence should fail,
     // because env-vars that parse as arrays are intentionally treated as strings.
     #[derive(Deserialize, Debug)]
+    #[allow(dead_code)]
     struct SeqConfig {
         arr_s: Vec<i64>,
     }
 
-    let res: Result<SeqConfig, env_toml::de::Error> = env_toml::from_str(r#"arr_s = "${VAR_ARRAY}""#);
+    let res: Result<SeqConfig, env_toml::de::Error> =
+        env_toml::from_str(r#"arr_s = "${VAR_ARRAY}""#);
     assert!(res.is_err());
 }
 
-
 #[test]
 fn test_env_var_in_string_optional_empty_default() {
-    unsafe { std::env::remove_var("OPTIONAL_VAL"); }
+    unsafe {
+        std::env::remove_var("OPTIONAL_VAL");
+    }
     let toml_str = r#"opt = "${OPTIONAL_VAL:}""#;
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -450,7 +483,9 @@ fn test_env_var_in_string_optional_empty_default() {
 
 #[test]
 fn test_env_var_in_string_optional_u16_empty_default() {
-    unsafe { std::env::remove_var("OPTIONAL_PORT"); }
+    unsafe {
+        std::env::remove_var("OPTIONAL_PORT");
+    }
     let toml_str = r#"port = "${OPTIONAL_PORT:}""#;
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -464,7 +499,9 @@ fn test_env_var_in_string_optional_u16_empty_default() {
 
 #[test]
 fn test_env_var_in_string_optional_no_default() {
-    unsafe { std::env::remove_var("OPTIONAL_VAL_2"); }
+    unsafe {
+        std::env::remove_var("OPTIONAL_VAL_2");
+    }
     let toml_str = r#"opt = "${OPTIONAL_VAL_2}""#;
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -479,7 +516,9 @@ fn test_env_var_in_string_optional_no_default() {
 
 #[test]
 fn test_env_var_in_string_optional_with_default() {
-    unsafe { std::env::remove_var("OPTIONAL_VAL_3"); }
+    unsafe {
+        std::env::remove_var("OPTIONAL_VAL_3");
+    }
     let toml_str = r#"opt = "${OPTIONAL_VAL_3:default}""#;
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -488,12 +527,14 @@ fn test_env_var_in_string_optional_with_default() {
     }
 
     let config: Config = env_toml::from_str(toml_str).expect("failed to parse TOML");
-    assert_eq!(config.opt, Some("default".to_string()));
+    assert_eq!(config.opt, Some("default".to_owned()));
 }
 
 #[test]
 fn test_env_var_in_string_non_optional_empty_default() {
-    unsafe { std::env::remove_var("NON_OPTIONAL_VAL"); }
+    unsafe {
+        std::env::remove_var("NON_OPTIONAL_VAL");
+    }
     let toml_str = r#"val = "${NON_OPTIONAL_VAL:}""#;
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -508,7 +549,9 @@ fn test_env_var_in_string_non_optional_empty_default() {
 
 #[test]
 fn test_env_var_in_string_optional_u16_present() {
-    unsafe { std::env::set_var("PRESENT_PORT", "9090"); }
+    unsafe {
+        std::env::set_var("PRESENT_PORT", "9090");
+    }
     let toml_str = r#"port = "${PRESENT_PORT:8080}""#;
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -522,7 +565,9 @@ fn test_env_var_in_string_optional_u16_present() {
 
 #[test]
 fn test_env_var_in_string_set_to_empty_string() {
-    unsafe { std::env::set_var("SET_EMPTY_VAL", ""); }
+    unsafe {
+        std::env::set_var("SET_EMPTY_VAL", "");
+    }
     let toml_str = r#"opt = "${SET_EMPTY_VAL:}""#;
 
     #[derive(Deserialize, Debug, PartialEq)]
@@ -537,7 +582,9 @@ fn test_env_var_in_string_set_to_empty_string() {
 
 #[test]
 fn test_env_var_dollar_in_default_in_string() {
-    unsafe { std::env::remove_var("MISSING_WITH_DOLLAR_DEFAULT"); }
+    unsafe {
+        std::env::remove_var("MISSING_WITH_DOLLAR_DEFAULT");
+    }
     // The default value itself contains a '$' — only possible via the quoted-string form.
     // e.g. a shell-style variable reference as a fallback: "${VAR:$OTHER}"
     let toml_str = r#"val = "${MISSING_WITH_DOLLAR_DEFAULT:$5.00}""#;
@@ -553,7 +600,9 @@ fn test_env_var_dollar_in_default_in_string() {
 
 #[test]
 fn test_env_var_dollar_in_default_set_from_env() {
-    unsafe { std::env::set_var("PRESENT_WITH_DOLLAR_DEFAULT", "actual"); }
+    unsafe {
+        std::env::set_var("PRESENT_WITH_DOLLAR_DEFAULT", "actual");
+    }
     // When the env var IS set, the '$'-containing default is never used.
     let toml_str = r#"val = "${PRESENT_WITH_DOLLAR_DEFAULT:$fallback}""#;
 

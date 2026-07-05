@@ -1,6 +1,3 @@
-use serde_core::de::IntoDeserializer as _;
-use serde_spanned::Spanned;
-use toml_datetime::de::DatetimeDeserializer;
 use super::ArrayDeserializer;
 use super::TableDeserializer;
 use crate::alloc_prelude::*;
@@ -9,6 +6,9 @@ use crate::de::DeString;
 use crate::de::DeTable;
 use crate::de::DeValue;
 use crate::de::Error;
+use serde_core::de::IntoDeserializer as _;
+use serde_spanned::Spanned;
+use toml_datetime::de::DatetimeDeserializer;
 
 /// Resolve an env var (or its default) to an owned String.
 /// Returns `Ok(None)` if the env var is not set and the default is explicitly empty (e.g. `${VAR:}`).
@@ -37,7 +37,7 @@ fn resolve_env_var(
             Some(d) => Some(d.into_owned()),
             None => {
                 return Err(Error::custom(
-                    format!("environment variable `{}` not set", name),
+                    format!("environment variable `{name}` not set"),
                     Some(span.clone()),
                 ));
             }
@@ -54,10 +54,7 @@ fn resolve_env_var(
 /// Re-parse a resolved env var string as a TOML value and dispatch to the
 /// appropriate visitor method.  Falls back to `visit_string` when the string
 /// is not a valid TOML literal.
-fn visit_env_var_value<'de, V>(
-    value: String,
-    visitor: V,
-) -> Result<V::Value, Error>
+fn visit_env_var_value<'de, V>(value: String, visitor: V) -> Result<V::Value, Error>
 where
     V: serde_core::de::Visitor<'de>,
 {
@@ -93,7 +90,6 @@ where
         Err(_) => visitor.visit_string(value),
     }
 }
-
 
 /// Helper function that checks if a single string is an interpolation pattern
 fn try_parse_interpolation(input: &str) -> Option<DeEnvVar<'_>> {
@@ -240,7 +236,7 @@ impl<'de> serde_core::Deserializer<'de> for ValueDeserializer<'de> {
                     let resolved = resolve_env_var(v, &span)?;
                     match resolved {
                         Some(value) => visit_env_var_value(value, visitor),
-                        None => visitor.visit_string("".to_string()),
+                        None => visitor.visit_string("".to_owned()),
                     }
                 } else {
                     match s {
@@ -277,7 +273,7 @@ impl<'de> serde_core::Deserializer<'de> for ValueDeserializer<'de> {
                 let value = resolve_env_var(v, &span)?;
                 match value {
                     Some(value) => EnvVarValueDeserializer { value }.deserialize_any(visitor),
-                    None => visitor.visit_string("".to_string()),
+                    None => visitor.visit_string("".to_owned()),
                 }
             }
         }
@@ -460,7 +456,6 @@ impl<'de> serde_core::Deserializer<'de> for ValueDeserializer<'de> {
             }
             _ => self.deserialize_any(visitor),
         }
-
         .map_err(|mut e: Self::Error| {
             if e.span().is_none() {
                 e.set_span(Some(span));

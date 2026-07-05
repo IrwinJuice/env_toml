@@ -2,8 +2,8 @@ use std::env;
 use std::io;
 use std::io::prelude::*;
 
-use serde_json::Value as Json;
 use env_toml::Value as Toml;
+use serde_json::Value as Json;
 
 fn main() {
     let mut args = env::args();

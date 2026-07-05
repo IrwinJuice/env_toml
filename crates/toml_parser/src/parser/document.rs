@@ -734,7 +734,6 @@ fn value(tokens: &mut Stream<'_>, receiver: &mut dyn EventReceiver, error: &mut 
     }
 }
 
-
 /// Parse an environment variable
 ///
 /// ```abnf
@@ -842,7 +841,6 @@ fn on_env_var(
 
     receiver.env_var(span, error);
 }
-
 
 /// Parse a scalar value
 ///
@@ -1193,7 +1191,6 @@ fn on_inline_table_open(
                     state = State::NeedsValue;
                 }
                 State::NeedsValue | State::NeedsComma => {
-
                     let msg = if current_token.kind() == TokenKind::Equals {
                         "extra assignment between key-value pairs"
                     } else {

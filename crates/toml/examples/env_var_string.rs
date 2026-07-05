@@ -16,7 +16,7 @@ struct Config {
     port_s: String,
     arr_s: String,
     tbl_s: String,
-    price: String
+    price: String,
 }
 
 fn main() {
@@ -60,4 +60,3 @@ fn main() {
     // e.g. a shell-style variable reference as a fallback: "${VAR:$OTHER}"
     assert_eq!(config.price, "$5.00");
 }
-
