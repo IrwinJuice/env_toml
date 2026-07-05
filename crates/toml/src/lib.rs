@@ -294,5 +294,5 @@ use core::str::FromStr;
 use toml_datetime::Datetime;
 
 #[doc = include_str!("../README.md")]
-#[cfg(doctest)]
+#[cfg(all(doctest, feature = "parse", feature = "serde"))]
 pub struct ReadmeDoctests;
