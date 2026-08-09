@@ -1,6 +1,6 @@
 [package]
 name = "env_toml"
-version = "0.2.3+upstream-1.1.2"
+version = "0.2.4+upstream-1.1.4"
 description = """
 A native Rust encoder and decoder of TOML-formatted files and streams with Environment Variables. Provides
 implementations of the standard Serialize/Deserialize traits for TOML data to
@@ -51,7 +51,7 @@ preserve_order = ["dep:indexmap", "std"]
 [dependencies]
 serde_core = { version = "1.0.228", default-features = false, features = ["alloc"], optional = true }
 indexmap = { version = "2.13.0", default-features = false, optional = true }
-env_toml_parser = { version = "0.1.0", path = "../toml_parser", default-features = false, features = ["alloc"], optional = true }
+env_toml_parser = { version = "0.1.1", path = "../toml_parser", default-features = false, features = ["alloc"], optional = true }
 winnow = { version = "1.0.0", default-features = false, optional = true }
 anstream = { version = "1.0.0", optional = true }
 anstyle = { version = "1.0.14", optional = true }
