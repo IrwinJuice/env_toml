@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+## [0.2.4] - 2026-08-09
+
 ### Chore 
 
 - Merge upstream
@@ -47,7 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Environment Variables support
 
 <!-- next-url -->
-[Unreleased]: https://github.com/IrwinJuice/env_toml/compare/env_toml-v0.2.3...HEAD
+[Unreleased]: https://github.com/IrwinJuice/env_toml/compare/env_toml-v0.2.4...HEAD
+[0.2.4]: https://github.com/IrwinJuice/env_toml/compare/env_toml-v0.2.3...env_toml-v0.2.4
 [0.2.3]: https://github.com/IrwinJuice/env_toml/compare/env_toml-v0.2.2...env_toml-v0.2.3
 [0.2.2]: https://github.com/IrwinJuice/env_toml/compare/env_toml-v0.2.1...env_toml-v0.2.2
 [0.2.1]: https://github.com/IrwinJuice/env_toml/compare/env_toml-v0.2.0...env_toml-v0.2.1
