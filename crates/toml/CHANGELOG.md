@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 <!-- next-header -->
 ## [Unreleased] - ReleaseDate
 
+### Chore 
+
+- Merge upstream
+
 ## [0.2.3] - 2026-07-19
+
+### Chore
+
+- Merge upstream
+- Add quoted string syntax for env var — valid TOML, friendlier to standard tooling
 
 ## [0.2.2] - 2026-06-28
 
