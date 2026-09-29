@@ -1,6 +1,6 @@
 [package]
 name = "env_toml_parser"
-version = "0.1.2+upstream-1.1.3"
+version = "0.1.3+upstream-1.1.3"
 description = "TOML parser with Environment Variables."
 categories = ["encoding", "parser-implementations", "parsing", "config"]
 keywords = ["encoding", "toml", "env", "environment"]
@@ -16,11 +16,11 @@ rustdoc-args = ["--generate-link-to-definition"]
 
 [package.metadata.release]
 pre-release-replacements = [
-    { file = "CHANGELOG.md", search = "Unreleased", replace = "{{version}}", min = 1 },
-    { file = "CHANGELOG.md", search = "\\.\\.\\.HEAD", replace = "...{{tag_name}}", exactly = 1 },
-    { file = "CHANGELOG.md", search = "ReleaseDate", replace = "{{date}}", min = 1 },
-    { file = "CHANGELOG.md", search = "<!-- next-header -->", replace = "<!-- next-header -->\n## [Unreleased] - ReleaseDate\n", exactly = 1 },
-    { file = "CHANGELOG.md", search = "<!-- next-url -->", replace = "<!-- next-url -->\n[Unreleased]: https://github.com/IrwinJuice/env_toml/compare/{{tag_name}}...HEAD", exactly = 1 },
+  {file="CHANGELOG.md", search="Unreleased", replace="{{version}}", min=1},
+  {file="CHANGELOG.md", search="\\.\\.\\.HEAD", replace="...{{tag_name}}", exactly=1},
+  {file="CHANGELOG.md", search="ReleaseDate", replace="{{date}}", min=1},
+  {file="CHANGELOG.md", search="<!-- next-header -->", replace="<!-- next-header -->\n## [Unreleased] - ReleaseDate\n", exactly=1},
+  {file="CHANGELOG.md", search="<!-- next-url -->", replace="<!-- next-url -->\n[Unreleased]: {{repository}}/compare/{{tag_name}}...HEAD", exactly=1},
 ]
 
 [features]
