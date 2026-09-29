@@ -149,7 +149,7 @@ checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
 
 [[package]]
 name = "env_toml"
-version = "0.2.4+upstream-1.1.4"
+version = "0.2.5+upstream-1.1.6"
 dependencies = [
  "anstream 1.0.0",
  "anstyle",
@@ -173,7 +173,7 @@ dependencies = [
 
 [[package]]
 name = "env_toml_parser"
-version = "0.1.2+upstream-1.1.3"
+version = "0.1.3+upstream-1.1.3"
 dependencies = [
  "anstream 1.0.0",
  "anstyle",
@@ -563,18 +563,18 @@ dependencies = [
 
 [[package]]
 name = "toml-test-data"
-version = "2.13.0"
+version = "2.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d24325a3efa2f94dc91ea9b435898f8a385ab68caa4621503670644a15121133"
+checksum = "bbbacd1924ba3c1482979744814c4d1499af9c0dda3c98a5daa17382cfe7d12e"
 dependencies = [
  "include_dir",
 ]
 
 [[package]]
 name = "toml-test-harness"
-version = "1.13.0"
+version = "1.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7bc04950ffde8357bee530f27f94e8ae57ba26361fe53bc1cd562cefccf8785c"
+checksum = "4e7cab3ec24fa74e8e65688f22ceb3950beed839e59c631146a8053fb0d33ab2"
 dependencies = [
  "ignore",
  "libtest2-mimic",
