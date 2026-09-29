@@ -1,11 +1,11 @@
-# env_toml_parser
+# toml_parser
 
-[![Documentation](https://img.shields.io/badge/docs-master-blue.svg)](https://docs.rs/env_toml_parser)
+[![Documentation](https://img.shields.io/badge/docs-main-blue.svg)](https://docs.rs/env_toml_parser)
 ![License](https://img.shields.io/crates/l/env_toml_parser.svg)
 [![Crates Status](https://img.shields.io/crates/v/env_toml_parser.svg)](https://crates.io/crates/env_toml_parser)
 
 
-Zero-copy parsing of TOML extended with Environment Variable syntax
+Zero-copy parsing of TOML
 
 ## License
 
